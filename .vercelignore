@@ -1,0 +1,9 @@
+node_modules
+.git
+.next
+logs
+tmp
+.DS_Store
+build
+dist
+public/static
