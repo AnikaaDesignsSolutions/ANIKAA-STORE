@@ -237,6 +237,7 @@ export async function updateCustomerBillingAddress(
   _currentState: Record<string, unknown>,
   formData: FormData
 ) {
+  console.log("formData ",formData)
   const customer = {
     billing_address: {
       first_name: formData.get("billing_address.first_name"),
