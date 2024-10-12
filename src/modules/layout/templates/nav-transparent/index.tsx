@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FC, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faHeart, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
-import './NavBar.css';
+import './navbar.css';
 
 const categories = [
   { name: 'Blouse', link: '/blouse' },
