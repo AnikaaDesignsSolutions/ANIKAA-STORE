@@ -13,7 +13,8 @@
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "test-e2e": "playwright test e2e"
+    "test-e2e": "playwright test e2e",
+    "postinstall": "patch-package"
   },
   "resolutions": {
     "webpack": "^5",
@@ -77,6 +78,7 @@
     "babel-loader": "^8.2.3",
     "eslint": "8.10.0",
     "eslint-config-next": "^13.4.5",
+    "patch-package": "^8.0.0",
     "postcss": "^8.4.8",
     "prettier": "^2.8.8",
     "tailwindcss": "^3.0.23",
