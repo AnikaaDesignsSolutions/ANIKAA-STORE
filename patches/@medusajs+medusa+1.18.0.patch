@@ -1,0 +1,47 @@
+diff --git a/node_modules/@medusajs/medusa/dist/models/address.d.ts b/node_modules/@medusajs/medusa/dist/models/address.d.ts
+index 44fd872..0f64926 100644
+--- a/node_modules/@medusajs/medusa/dist/models/address.d.ts
++++ b/node_modules/@medusajs/medusa/dist/models/address.d.ts
+@@ -14,6 +14,8 @@ export declare class Address extends SoftDeletableEntity {
+     country: Country | null;
+     province: string | null;
+     postal_code: string | null;
++    latitude: number | null;
++    longitude: number | null;
+     phone: string | null;
+     metadata: Record<string, unknown>;
+     /**
+diff --git a/node_modules/@medusajs/medusa/dist/models/line-item.d.ts b/node_modules/@medusajs/medusa/dist/models/line-item.d.ts
+index 7d77f94..3ce95b2 100644
+--- a/node_modules/@medusajs/medusa/dist/models/line-item.d.ts
++++ b/node_modules/@medusajs/medusa/dist/models/line-item.d.ts
+@@ -48,6 +48,7 @@ export declare class LineItem extends BaseEntity {
+     discount_total?: number | null;
+     raw_discount_total?: number | null;
+     gift_card_total?: number | null;
++    material_design_data?: Record<string, any>;
+     /**
+      * @apiIgnore
+      */
+diff --git a/node_modules/@medusajs/medusa/dist/types/common.d.ts b/node_modules/@medusajs/medusa/dist/types/common.d.ts
+index 9e058a1..1e4db3a 100644
+--- a/node_modules/@medusajs/medusa/dist/types/common.d.ts
++++ b/node_modules/@medusajs/medusa/dist/types/common.d.ts
+@@ -266,6 +266,8 @@ export declare class AddressPayload {
+     country_code?: string;
+     province?: string;
+     postal_code?: string;
++    latitude?: number;
++    longitude?: number;
+ }
+ /**
+  * @schema AddressCreatePayload
+@@ -337,6 +339,8 @@ export declare class AddressCreatePayload {
+     country_code: string;
+     province: string;
+     postal_code: string;
++    latitude?: number;
++    longitude?: number;
+ }
+ /**
+  * Parameters that can be used to configure how data is retrieved.
