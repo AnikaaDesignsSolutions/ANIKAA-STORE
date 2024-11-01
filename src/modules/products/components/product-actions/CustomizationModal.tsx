@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, ChangeEvent, useEffect } from "react";
 import { Dialog, DialogTitle, DialogContent, IconButton, Button, TextField } from "@mui/material";
 import X from "@modules/common/icons/x";

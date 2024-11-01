@@ -11,6 +11,8 @@ import User from "@modules/common/icons/user"
 import MapPin from "@modules/common/icons/map-pin"
 import Package from "@modules/common/icons/package"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faRulerCombined } from "@fortawesome/free-solid-svg-icons"
 
 const AccountNav = ({
   customer,
@@ -28,29 +30,31 @@ const AccountNav = ({
     customer: Omit<Customer, "password_hash"> | null
   ) => {
     let count = 0
-  
+
     if (!customer) {
       return 0
     }
-  
+
     if (customer.email) {
       count++
     }
-  
+
     if (customer.first_name && customer.last_name) {
       count++
     }
-  
+
     if (customer.phone) {
       count++
     }
-  
+
     if (customer.billing_address) {
       count++
     }
-  
+
     return (count / 4) * 100
   }
+
+  // console.log("customer AccountNav ",customer)
 
   return (
     <div>
@@ -72,7 +76,7 @@ const AccountNav = ({
               Hello {customer?.first_name}
             </div>
             <div className="text-xl-semi mb-4 px-8">
-            {getProfileCompletion(customer) < 100 && <h3 className="text-large-semi text-rose-500 mb-6">Please complete filling your billing address to complete your profile</h3>}
+              {getProfileCompletion(customer) < 100 && <h3 className="text-large-semi text-rose-500 mb-6">Please complete filling your billing address to complete your profile</h3>}
             </div>
             <div className="text-base-regular">
               <ul>
@@ -115,6 +119,19 @@ const AccountNav = ({
                     <div className="flex items-center gap-x-2">
                       <Package size={20} />
                       <span>Orders</span>
+                    </div>
+                    <ChevronDown className="transform -rotate-90" />
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    href="/explore/account/measurements"
+                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    data-testid="measurements-link"
+                  >
+                    <div className="flex items-center gap-x-2">
+                      <FontAwesomeIcon icon={faRulerCombined} size="lg" />
+                      <span>Customer Measurements</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />
                   </LocalizedClientLink>
@@ -179,6 +196,15 @@ const AccountNav = ({
                   data-testid="orders-link"
                 >
                   Orders
+                </AccountNavLink>
+              </li>
+              <li>
+                <AccountNavLink
+                  href="/explore/account/measurements"
+                  route={route!}
+                  data-testid="orders-link"
+                >
+                  Customer Measurements
                 </AccountNavLink>
               </li>
               <li className="text-grey-700">

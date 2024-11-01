@@ -52,7 +52,7 @@
 }
 
 .scroll-button {
-  background-color: black;
+  background-color: #ee0a67;
   color: white;
   border: none;
   padding: 0.5rem 1.2rem;
@@ -64,7 +64,7 @@
 }
 
 .scroll-button:hover {
-  background-color: #ee0a67;
+  background-color: #000;
 }
 
 /* Large Screen Adjustments */

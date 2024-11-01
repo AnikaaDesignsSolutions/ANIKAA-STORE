@@ -6,8 +6,15 @@ import { Button, IconButton } from "@medusajs/ui";
 import { Grid, Modal, Box, TextField } from "@mui/material";
 import X from "@modules/common/icons/x";
 import { MEDUSA_BACKEND_URL } from "@lib/config";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+
+// Regex patterns
+const namePattern = /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/;
+const phonePattern = /^(\+91)?[7-9][0-9]{9}$/;
+
 // Dynamically import ProfileLocationMap with no SSR
-const ProfileLocationMap = dynamic(() => import('./ProfileLocationMap'), { ssr: false });
+const ProfileLocationMap = dynamic(() => import("./ProfileLocationMap"), { ssr: false });
 
 type ProfileLocationProps = {
   modalState: boolean;
@@ -36,6 +43,16 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
   const [phone, setPhone] = useState<string>("");
   const [company, setCompany] = useState<string>("");
 
+  // Error state variables
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    company: "",
+  });
+
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+
   const isClient = typeof window !== "undefined";
 
   // Get the current location of the user as soon as the component loads
@@ -60,6 +77,45 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
       setLoading(false);
     }
   }, [isClient]);
+
+  // Validate fields
+  const validateField = (name: string, value: string) => {
+    let error = "";
+
+    switch (name) {
+      case "firstName":
+        if (!namePattern.test(value)) {
+          error = "First name should only contain alphabets.";
+        }
+        break;
+      case "lastName":
+        if (value && !namePattern.test(value)) {
+          error = "Last name should only contain alphabets.";
+        }
+        break;
+      case "phone":
+        if (!phonePattern.test(value)) {
+          error = "Phone number must start with +91 and be 10 digits long.";
+        }
+        break;
+      case "company":
+        if (!value) {
+          error = "Location Name is required.";
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
+    checkFormValidity({ ...errors, [name]: error });
+  };
+
+  // Check form validity
+  const checkFormValidity = (updatedErrors: typeof errors) => {
+    const isValid = !Object.values(updatedErrors).some((error) => error !== "") && company !== "";
+    setIsFormValid(isValid);
+  };
 
   // Function to get the current location when the button is clicked
   const handleUseCurrentLocation = () => {
@@ -94,8 +150,8 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
             `https://nominatim.openstreetmap.org/reverse?lat=${position.lat}&lon=${position.lng}&format=json`
           );
           const data = await response.json();
-          // console.log("data ", data);
 
+          console.log("data.address ",data.address)
           if (data && data.address) {
             const {
               road,
@@ -136,7 +192,7 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
 
   // Function to handle the "Confirm Address" button click
   const handleConfirmAddress = async () => {
-    if (position) {
+    if (position && isFormValid) {
       const { lat, lng } = position;
 
       const newAddress = {
@@ -168,7 +224,6 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
 
         const responseData = await response.json();
         if (response.ok) {
-          // console.log("Address updated successfully:", responseData);
           closeModal();
         } else {
           console.error("Failed to update address:", responseData.message);
@@ -177,7 +232,7 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
         console.error("Error updating address:", error);
       }
     } else {
-      console.log("No location selected.");
+      console.log("No location selected or form is invalid.");
     }
   };
 
@@ -207,12 +262,11 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
         <IconButton
           onClick={closeModal}
           style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
+            position: "absolute",
+            top: "10px",
+            right: "10px",
             zIndex: 1000, // Ensures the button appears above all other elements in the modal
           }}
-          
         >
           <X />
         </IconButton>
@@ -222,7 +276,10 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
           onClick={handleUseCurrentLocation}
           disabled={loading}
           className="h-10 mb-4"
+          style={{ backgroundColor: "#e88b9a" }}
         >
+          <FontAwesomeIcon icon={faLocationDot} />
+          &nbsp;
           {loading ? "Getting Current Location..." : "Use Current Location"}
         </Button>
         <div style={{ flex: 1 }}>
@@ -243,40 +300,60 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
                   <TextField
                     label="First Name"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => {
+                      setFirstName(e.target.value);
+                      validateField("firstName", e.target.value);
+                    }}
                     required
                     fullWidth
                     margin="normal"
+                    error={!!errors.firstName}
+                    helperText={errors.firstName}
                   />
                 </Grid>
                 <Grid item xs={6} sm={6}>
                   <TextField
                     label="Last Name"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      validateField("lastName", e.target.value);
+                    }}
+                    // required
                     fullWidth
                     margin="normal"
+                    error={!!errors.lastName}
+                    helperText={errors.lastName}
                   />
                 </Grid>
                 <Grid item xs={6} sm={6}>
                   <TextField
                     label="Phone"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      validateField("phone", e.target.value);
+                    }}
                     required
                     fullWidth
                     margin="normal"
+                    error={!!errors.phone}
+                    helperText={errors.phone}
                   />
                 </Grid>
                 <Grid item xs={6} sm={6}>
                   <TextField
                     label="Location Name"
                     value={company}
-                    onChange={(e) => setCompany(e.target.value)}
+                    onChange={(e) => {
+                      setCompany(e.target.value);
+                      validateField("company", e.target.value);
+                    }}
                     required
                     fullWidth
                     margin="normal"
+                    error={!!errors.company}
+                    helperText={errors.company} // Display the error message for company field
                   />
                 </Grid>
               </Grid>
@@ -285,6 +362,8 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
                 onClick={handleConfirmAddress}
                 className="h-10"
                 data-testid="confirm-address-button"
+                style={{ backgroundColor: "#6e323b" }}
+                disabled={!isFormValid} // Disable when there are validation errors or company is not filled
               >
                 Confirm Address
               </Button>
@@ -301,6 +380,7 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
               }}
               className="h-10"
               data-testid="set-address-button"
+              style={{ backgroundColor: "#6e323b" }}
             >
               Set Address with This Location
             </Button>

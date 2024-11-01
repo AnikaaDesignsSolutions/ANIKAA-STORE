@@ -17,6 +17,7 @@ import Spinner from "@modules/common/icons/spinner";
 import { useFormState } from "react-dom";
 import { SubmitButton } from "@modules/checkout/components/submit-button";
 import MapModal from "./MapModal";
+import { namePattern, cityPattern, postalCodePattern, phoneNumberPattern } from "@lib/util/regex";
 
 type EditAddressProps = {
   region: Region;
@@ -64,6 +65,82 @@ const EditAddress: React.FC<EditAddressProps> = ({
     setRemoving(false);
   };
 
+  const [errors, setErrors] = useState({
+    first_name: "",
+    last_name: "",
+    postal_code: "",
+    city: "",
+    province: "",
+    phone: "",
+  });
+
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  const validateField = (name: string, value: string) => {
+    let error = "";
+  
+    switch (name) {
+      case "first_name":
+        if (!namePattern.test(value)) {
+          error = "First Name should only contain alphabets";
+        }
+        break;
+      case "last_name":
+        if (value && !namePattern.test(value)) {
+          // Only validate last_name if a value is entered
+          error = "Last Name should only contain alphabets";
+        }
+        break;
+      case "postal_code":
+        if (!postalCodePattern.test(value)) {
+          error = "Postal Code should be a 6-digit number.";
+        }
+        break;
+      case "city":
+        if (!cityPattern.test(value)) {
+          error = "City name should only contain alphabets.";
+        }
+        break;
+      case "province":
+        if (!cityPattern.test(value)) {
+          error = "Province name should only contain alphabets.";
+        }
+        break;
+      case "phone":
+        if (!phoneNumberPattern.test(value)) {
+          error = "Phone number should start with +91 and be 10 digits.";
+        }
+        break;
+      default:
+        break;
+    }
+  
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  
+    // After setting the error, check if the form is valid
+    checkFormValidity({ ...errors, [name]: error }, { ...address, [name]: value });
+  };
+ 
+
+  const checkFormValidity = (updatedErrors: typeof errors, updatedAddress: typeof address) => {
+    const isValid = 
+      !Object.values(updatedErrors).some((error) => error !== "") && // No errors in form
+      !!updatedAddress.first_name && // Check if required fields are filled
+      !!updatedAddress.postal_code &&
+      !!updatedAddress.city &&
+      !!updatedAddress.phone;
+    
+    setIsFormValid(isValid); // Set form validity
+  };
+  
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAddress({ ...address, [name]: value });
+    validateField(name, value); // Validate field as user types
+  };
+
+  // console.log("address ",address)
   return (
     <>
       <div
@@ -121,7 +198,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
       {address.latitude && address.longitude ? (
         <MapModal address={address} open={state} onClose={close} />
       ) : (
-        <Modal isOpen={state} close={close} data-testid="edit-address-modal">
+        <Modal isOpen={state} close={close} data-testid="edit-address-modal" >
           <Modal.Title>
             <Heading className="mb-2">Edit address</Heading>
           </Modal.Title>
@@ -135,23 +212,43 @@ const EditAddress: React.FC<EditAddressProps> = ({
                     required
                     autoComplete="given-name"
                     defaultValue={address.first_name || undefined}
+                    onChange={handleInputChange}
                     data-testid="first-name-input"
-                  />
+                  />                  
                   <Input
                     label="Last name"
                     name="last_name"
-                    required
+                    // required
                     autoComplete="family-name"
                     defaultValue={address.last_name || undefined}
+                    onChange={handleInputChange}
                     data-testid="last-name-input"
                   />
+                 
+                </div>
+                <div className="grid grid-cols-2 gap-x-2">
+                {errors.first_name && (
+                    <p className="text-red-500 text-xsmall-regular">{errors.first_name}</p>
+                  )}
+                {errors.last_name && (
+                    <p className="text-red-500 text-xsmall-regular">{errors.last_name}</p>
+                  )}
                 </div>
                 <Input
                   label="Location Name"
                   name="company"
                   autoComplete="organization"
                   defaultValue={address.company || undefined}
+                  onChange={handleInputChange}
                   data-testid="company-input"
+                />
+                                <Input
+                  label="Landmark"
+                  name="address_2"
+                  autoComplete="address-line2"
+                  defaultValue={address.address_2 || undefined}
+                  onChange={handleInputChange}
+                  data-testid="address-2-input"
                 />
                 <Input
                   label="Address"
@@ -159,14 +256,8 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   required
                   autoComplete="address-line1"
                   defaultValue={address.address_1 || undefined}
+                  onChange={handleInputChange}
                   data-testid="address-1-input"
-                />
-                <Input
-                  label="Apartment, suite, etc."
-                  name="address_2"
-                  autoComplete="address-line2"
-                  defaultValue={address.address_2 || undefined}
-                  data-testid="address-2-input"
                 />
                 <div className="grid grid-cols-[144px_1fr] gap-x-2">
                   <Input
@@ -175,6 +266,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                     required
                     autoComplete="postal-code"
                     defaultValue={address.postal_code || undefined}
+                    onChange={handleInputChange}
                     data-testid="postal-code-input"
                   />
                   <Input
@@ -183,16 +275,29 @@ const EditAddress: React.FC<EditAddressProps> = ({
                     required
                     autoComplete="locality"
                     defaultValue={address.city || undefined}
+                    onChange={handleInputChange}
                     data-testid="city-input"
-                  />
+                  />                
+                </div>
+                <div className="grid grid-cols-[144px_1fr] gap-x-2">
+                {errors.postal_code && (
+                    <p className="text-red-500 text-xsmall-regular">{errors.postal_code}</p>
+                  )}
+                {errors.city && (
+                    <p className="text-red-500 text-xsmall-regular">{errors.city}</p>
+                  )}
                 </div>
                 <Input
                   label="Province / State"
                   name="province"
                   autoComplete="address-level1"
                   defaultValue={address.province || undefined}
+                  onChange={handleInputChange}
                   data-testid="state-input"
                 />
+                 {errors.province && (
+                    <p className="text-red-500 text-xsmall-regular">{errors.province}</p>
+                  )}
                 <CountrySelect
                   name="country_code"
                   region={region}
@@ -209,8 +314,12 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   name="phone"
                   autoComplete="phone"
                   defaultValue={address.phone || undefined}
+                  onChange={handleInputChange}
                   data-testid="phone-input"
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-xsmall-regular">{errors.phone}</p>
+                )}
               </div>
               {formState.error && (
                 <div className="text-rose-500 text-small-regular py-2">
@@ -229,7 +338,12 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 >
                   Cancel
                 </Button>
-                <SubmitButton data-testid="save-button">Save</SubmitButton>
+                <SubmitButton
+                  data-testid="save-button"
+                  disabled={!isFormValid} // Disable the button when form is invalid
+                >
+                  Save
+                </SubmitButton>
               </div>
             </Modal.Footer>
           </form>

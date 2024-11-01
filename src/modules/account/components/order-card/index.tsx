@@ -37,44 +37,59 @@ const OrderCard = ({ order }: OrderCardProps) => {
             includeTaxes: false,
           })}
         </span>
-        <span className="pl-2">{`${numberOfLines} ${
-          numberOfLines > 1 ? "items" : "item"
-        }`}</span>
+        <span className="pl-2">{`${numberOfLines} ${numberOfLines > 1 ? "items" : "item"}`}</span>
       </div>
       <div className="grid grid-cols-2 small:grid-cols-4 gap-4 my-4">
         {order.items.slice(0, 3).map((i) => {
+          const designData = i.material_design_data;
+          const designDataKeys = designData ? Object.keys(designData) : []; // Ensure designData is defined
+          const maxDesignsToShow = 3;
+          const displayedDesigns = designDataKeys.slice(0, maxDesignsToShow); // Display only first 4
+          const hiddenDesignsCount = designDataKeys.length - maxDesignsToShow;
+
           return (
-            <div
-              key={i.id}
-              className="flex flex-col gap-y-2"
-              data-testid="order-item"
-            >
-              <Thumbnail thumbnail={i.thumbnail} images={[]} size="full" />
-              <div className="flex items-center text-small-regular text-ui-fg-base">
-                <span
-                  className="text-ui-fg-base font-semibold"
-                  data-testid="item-title"
-                >
+            <div key={i.id} className="flex flex-col gap-y-2" data-testid="order-item">
+              <div className="flex flex-col gap-x-4 sm:flex-row sm:gap-y-4">
+                {/* Iterate over the limited number of designData items */}
+                {displayedDesigns.map((imageUrl, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    {/* Display the image thumbnail */}
+                    <Thumbnail thumbnail={imageUrl} images={[]} size="small" />
+
+                    {/* Display attach_lining information */}
+                    <div className="text-small-regular text-ui-fg-base mt-1">
+                      <span className="text-small-regular text-ui-fg-base font-semibold" data-testid="item-title">
+                        {designData && designData[imageUrl]?.attach_lining
+                          ? "Attached Lining: Yes"
+                          : "Attached Lining: No"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* If there are more than 4 designs, display the hidden count */}
+              {hiddenDesignsCount > 0 && (
+                <div className="text-small-regular text-ui-fg-base mt-2">
+                  + {hiddenDesignsCount} more
+                </div>
+              )}
+
+              <div className="flex items-center text-small-regular text-ui-fg-base mt-2">
+                <span className="text-ui-fg-base font-semibold" data-testid="item-title">
                   {i.title}
                 </span>
                 <span className="ml-2">x</span>
                 <span data-testid="item-quantity">{i.quantity}</span>
               </div>
             </div>
-          )
+          );
         })}
-        {numberOfProducts > 4 && (
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <span className="text-small-regular text-ui-fg-base">
-              + {numberOfLines - 4}
-            </span>
-            <span className="text-small-regular text-ui-fg-base">more</span>
-          </div>
-        )}
       </div>
+
       <div className="flex justify-end">
         <LocalizedClientLink href={`/explore/account/orders/details/${order.id}`}>
-          <Button data-testid="order-details-link" variant="secondary">
+          <Button data-testid="order-details-link" variant="secondary" className="btn-custom hover:text-black">
             See details
           </Button>
         </LocalizedClientLink>

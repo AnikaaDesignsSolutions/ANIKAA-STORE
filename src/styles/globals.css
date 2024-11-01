@@ -271,3 +271,31 @@
   font-weight: 700;
 }
 }
+
+@layer utilities {
+  .text-ui-fg-interactive {
+    color: #e88b9a; 
+    font-weight: bold;
+  }
+  .text-ui-fg-interactive-hover{
+    color: #6e323b; 
+  }
+
+}
+.btn-custom {
+  font-family: 'Avenir Next LT W02 Regular', sans-serif;
+  letter-spacing: 0.05em;
+  background-color: #6e323b; /* Set background color */
+  color: white; /* Set text color */
+  font-weight: bold; /* Optional: Make text bold */
+  transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+.btn-second-custom {
+  background-color: #e88b9a; /* Hover color */
+}
+
+.MuiTypography-root, 
+.MuiButton-root,
+.MuiInputBase-root {
+  font-family: 'Caudex', serif;
+}

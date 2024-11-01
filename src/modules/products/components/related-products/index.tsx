@@ -52,14 +52,15 @@ export default async function RelatedProducts({
     countryCode,
   }).then(({ response }) =>
     response.products.filter(
-      (productPreview) => productPreview.id !== product.id
+      (productPreview) => 
+        productPreview.id !== product.id &&
+        !productPreview.title.toLowerCase().includes("lining")
     )
   )
 
   if (!productPreviews.length) {
     return null
   }
-
   return (
     <div className="product-page-constraint">
       <div className="flex flex-col items-center text-center mb-16">

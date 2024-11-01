@@ -16,6 +16,7 @@ import OptionSelect from "@modules/products/components/option-select";
 import { LineItem } from "@medusajs/medusa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import MobileActions from "../mobile-actions";
 import ProductPrice from "../product-price";
@@ -24,6 +25,8 @@ import DesignPreferencesModal from "./DesignPreferencesModal";
 import axios from "axios";
 import { MEDUSA_BACKEND_URL } from "@lib/config";
 import X from "@modules/common/icons/x";
+import ImageCaptureModal from "./CameraUploadModal";
+
 
 type ProductActionsProps = {
   product: PricedProduct;
@@ -42,6 +45,7 @@ type LineItemWithDesign = {
   material_design_data?: Record<string, any>; // Define this according to your actual structure
 } & LineItem; // Extending the existing LineItem type
 
+
 export default function ProductActions({
   product,
   region,
@@ -54,6 +58,7 @@ export default function ProductActions({
   const [quantity, setQuantity] = useState(0); // Initialize quantity with 0
   const [modalOpen, setModalOpen] = useState(false); // Track if modal is open
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false); // Track delete confirmation modal
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false); // Track delete confirmation modal
   const [designModalOpen, setDesignModalOpen] = useState(false); // Track design preferences modal
   const [selectedMaterialImageUrl, setSelectedMaterialImageUrl] = useState<string | null>(null); // Track the selected material image URL
   const [quantityImages, setQuantityImages] = useState<Record<number, string>>(
@@ -75,6 +80,8 @@ export default function ProductActions({
   const router = useRouter();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+
 
   // Initialize the option state
   useEffect(() => {
@@ -163,212 +170,81 @@ export default function ProductActions({
     fetchProductDetails(); // Fetch product details on component mount
   }, [product.id]);
 
-  // Fetch cart and design preferences, set quantity based on designPreferencesByImageUrl
 // Fetch cart and design preferences, set quantity based on designPreferencesByImageUrl
 useEffect(() => {
-  const fetchCart = async () => {
+  const fetchAllDesignPreferences = async () => {
     const cartData = await retrieveCart();
     setCart(cartData);
 
-    // Ensure that cartData and items exist and check for variant
-    if (cartData?.items && Array.isArray(cartData.items) && cartData.items.length > 0 && variants?.length === 1 && variants[0].id) {
-      const item = cartData.items.find((item: LineItemWithDesign) => item.variant_id === variants[0].id);
+    // Ensure cartData and items exist and check for variants
+    if (cartData?.items && Array.isArray(cartData.items) && cartData.items.length > 0 && variants?.length > 0) {
+      // Iterate over each variant to find matching items in the cart
+      const updatedPreferences = { ...designPreferencesByImageUrl };
 
-      setCartItem(item);
-      if (item && item.material_design_data) {
-        setDesignPreferencesByImageUrl((prev) => {
-          const updatedPreferences = { ...prev };
-          
-          // Check if material_design_data is defined before using Object.entries
-          if (item.material_design_data) {
-            Object.entries(item.material_design_data).forEach(([imageUrl, designData]) => {
-              if (!prev[imageUrl]) {
-                updatedPreferences[imageUrl] = designData; // Update only if not already in local state
-              }
-            });
-          }
-      
-          return updatedPreferences;
-        });
-      }
-      
+      variants.forEach((variant) => {
+        const item = cartData.items.find((item: LineItemWithDesign) => item.variant_id === variant.id);
+
+        // If a matching item is found and it contains material_design_data, update the preferences
+        if (item && item.material_design_data) {
+          Object.entries(item.material_design_data).forEach(([imageUrl, designData]) => {
+            if (!updatedPreferences[imageUrl]) {
+              updatedPreferences[imageUrl] = designData; // Update only if not already in local state
+            }
+          });
+        }
+      });
+
+      // Set the updated design preferences
+      setDesignPreferencesByImageUrl(updatedPreferences);
     }
   };
 
   if (!localChanges) {
     // Fetch the cart data only if no local changes have been made
-    fetchCart();
+    fetchAllDesignPreferences();
   }
 }, [variants, localChanges]); // Run this effect whenever `variants` or `localChanges` changes
+
 
   // Update quantity based on the number of records in designPreferencesByImageUrl
   useEffect(() => {
     const quantityFromDesignPreferences = Object.keys(designPreferencesByImageUrl).length;
 
-    console.log("quantityFromDesignPreferences ",quantityFromDesignPreferences)
+    // console.log("quantityFromDesignPreferences ",quantityFromDesignPreferences)
     setQuantity(quantityFromDesignPreferences); // Set quantity based on the number of entries
   }, [designPreferencesByImageUrl]); // Recalculate quantity whenever designPreferencesByImageUrl changes
 
   const handleButtonClick = () => {
     if (Object.keys(designPreferencesByImageUrl).length > 0) {
       // Navigate to the cart if designPreferencesByImageUrl is not empty
-      router.push('/explore/cart');
+      router.push('/checkout');
     } else {
       // Otherwise, trigger the add to cart action
-      handleAddToCart();
+      handleIncreaseQuantity();
     }
   };
+ 
+// console.log("cart ",cart)
 
-  const handleAddToCart = async () => {
-    if (quantity === 0 || Object.keys(quantityImages).length === 0) {
-      setModalOpen(true);
-      return;
-    }
-  
-    if (!variant?.id) return null;
-  
-    setIsAdding(true);
-  
-    await addToCart({
-      variantId: variant.id,
-      quantity: 1,
-      countryCode,
-    });
-  
-    const updatedCart = await retrieveCart();
-  
-    // Ensure updatedCart is not null before proceeding
-    if (updatedCart && updatedCart.items) {
-      setCart(updatedCart);
-  
-      const updatedMatchingItem = updatedCart.items.find((item: any) => item.variant_id === variant.id);
-      setMatchingItem(updatedMatchingItem);
-  
-      // Call API to update design preferences with matchingItem.id
-      if (updatedMatchingItem && designPreferencesByImageUrl) {
-        for (const [materialImageUrl, designData] of Object.entries(designPreferencesByImageUrl)) {
-          const postData = {
-            id: updatedMatchingItem.id,
-            material_image_url: materialImageUrl,
-            design_preference: designData.design_preference,
-            design_images: designData.design_images,
-            measurement_dress_images: designData.measurement_dress_images,
-            measurement_values: designData.measurement_values,
-            attach_lining: designData.attach_lining, // Add attach_lining value here
-          };
-          try {
-            await axios.post(`${MEDUSA_BACKEND_URL}/store/customizeDesign`, postData);
-            console.log("Design preferences updated successfully for", materialImageUrl);
-          } catch (error) {
-            console.error("Error updating design preferences:", error);
-          }
-        }
-      }
-    } else {
-      console.error("Cart is null or has no items.");
-    }
-  
-    setIsAdding(false);
-  };
-  
+const lineItemId = cart?.items.find((item: any) => item.variant_id === variant?.id);
 
-  const handleSpecificMaterialAddToCart = async (materialImageUrl: string) => {
-    if (!variant?.id) return null;
-  
-    setIsAdding(true);
-  
-    // Add the specific variant to the cart
-    await addToCart({
-      variantId: variant.id,
-      quantity: 1,
-      countryCode,
-    });
-  
-    const updatedCart = await retrieveCart();
-    setCart(updatedCart);
-  
-    // Check if updatedCart is not null before accessing its items
-    if (updatedCart && updatedCart.items) {
-      const updatedMatchingItem = updatedCart.items.find((item: any) => item.variant_id === variant.id);
-      setMatchingItem(updatedMatchingItem);
-  
-      // Check if the selected material is in the design preferences
-      const designData = designPreferencesByImageUrl[materialImageUrl];
-  
-      if (updatedMatchingItem && designData) {
-        const postData = {
-          id: updatedMatchingItem.id,
-          material_image_url: materialImageUrl,
-          design_preference: designData.design_preference,
-          design_images: designData.design_images,
-          measurement_dress_images: designData.measurement_dress_images,
-          measurement_values: designData.measurement_values,
-          attach_lining: designData.attach_lining,
-        };
-  
-        try {
-          await axios.post(`${MEDUSA_BACKEND_URL}/store/customizeDesign`, postData);
-          console.log("Design preferences updated successfully for", materialImageUrl);
-  
-          // Update the local cartItem state immediately after adding to the cart
-          setCartItem((prevCartItem: LineItemWithDesign | null) => {
-            const updatedCartItem = { ...prevCartItem };
-  
-            // Add the new materialImageUrl to material_design_data in cartItem
-            if (!updatedCartItem.material_design_data) {
-              updatedCartItem.material_design_data = {};
-            }
-            updatedCartItem.material_design_data[materialImageUrl] = designData;
-  
-            return updatedCartItem;
-          });
-        } catch (error) {
-          console.error("Error updating design preferences:", error);
-        }
-      }
-    } else {
-      console.error("Updated cart is null or does not contain items.");
-    }
-  
-    setIsAdding(false);
-  };
-  
+const handleUploadImage = async (imageUrl: string) => {
 
-console.log("cart ",cart)
+      if (imageUrl) {
 
-  const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("image", file);
-    try {
-      const response = await fetch(
-        `${MEDUSA_BACKEND_URL}/store/designImageUpload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      const data = await response.json();
-      if (data?.files?.image?.[0]?.url) {
+        // console.log("image url ",imageUrl)
         setQuantityImages((prev) => ({
           ...prev,
-          [quantity]: data.files.image[0].url,
+          [quantity]: imageUrl,
         }));
 
-        setImageUrl(data.files.image[0].url);
+        setImageUrl(imageUrl);
         setModalOpen(false); // Close the modal after uploading the image
         setDesignModalOpen(true); // Open design preferences modal
-        setSelectedMaterialImageUrl(data.files.image[0].url); // Track the material image URL associated with this upload
-        // setQuantity((prev) => prev + 1); // Increase the quantity after the image is successfully uploaded
+        setSelectedMaterialImageUrl(imageUrl); // Track the material image URL associated with this upload
         setLocalChanges(true); // Mark that local changes have been made
       }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    } finally {
-      setUploading(false);
-    }
+     
   };
 
   // Handle showing the modal when clicking the "+" button
@@ -381,8 +257,14 @@ console.log("cart ",cart)
     setDeleteConfirmationOpen(true); // Show the delete confirmation modal
   };
 
-  console.log("designPreferencesByImageUrl ",designPreferencesByImageUrl)
+  // console.log("designPreferencesByImageUrl ",designPreferencesByImageUrl)
 
+  const openDeleteModal = async (materialImageUrl: string) => {
+    if (!materialImageUrl) return;
+    setDeleteConfirmation(true)
+    setSelectedMaterialForDeletion(materialImageUrl);
+
+  }
   // Handle material image deletion after confirmation
   const confirmDeleteQuantity = async () => {
     if (!selectedMaterialForDeletion) return;
@@ -390,52 +272,47 @@ console.log("cart ",cart)
     const designData = designPreferencesByImageUrl[selectedMaterialForDeletion];
 
     if (!designData) {
-      console.log("No design data found for the selected material image.");
+      // console.log("No design data found for the selected material image.");
       return;
     }
 
-    console.log("designData ",designData)
+    console.log("selectedMaterialForDeletion ",selectedMaterialForDeletion)
+
+    // console.log("designData ",designData)
 
     const designImages = designData?.design_images || [];
     const measurementDressImages = designData?.measurement_dress_images || []; // Include measurement dress images
     const allImagesForDeletion = [...designImages, ...measurementDressImages, selectedMaterialForDeletion]; // Include measurement dress images in deletion
 
   // Log the array of image URLs for deletion
-  console.log("Images for deletion:", allImagesForDeletion);
+  // console.log("Images for deletion:", allImagesForDeletion);
 
     
   const matchingCartItem = cart?.items?.find((item: LineItemWithDesign) => item.variant_id === variant?.id);
-
-    console.log("selectedMaterialForDeletion ", selectedMaterialForDeletion);
-    console.log("matchingCartItem ", matchingCartItem);
-    // console.log("matchingCartItem.quantity ", matchingCartItem.quantity);
-
-    // Now check if the selected material exists in the matching cart item's material_design_data
-    // const existsInCart = matchingCartItem?.material_design_data?.[selectedMaterialForDeletion];
-
-    console.log("cart?.material_design_data ", matchingCartItem?.material_design_data);
-    // console.log("existsInCart ", existsInCart);
+  const matchingItem = cart.items.find((item: LineItemWithDesign) => 
+    item.material_design_data && item.material_design_data[selectedMaterialForDeletion]
+  );
 
     // if (existsInCart) {
       // If the material image exists in cart, call API to delete
       try {
-        console.log("matchingCartItem?.id ", matchingCartItem?.id);
-        console.log("selectedMaterialForDeletion ", selectedMaterialForDeletion);
+        // console.log("matchingCartItem?.id ", matchingCartItem?.id);
+        // console.log("selectedMaterialForDeletion ", selectedMaterialForDeletion);
 
         // Use axios delete and pass the data using `data` field
         await axios.delete(`${MEDUSA_BACKEND_URL}/store/deleteMaterialImage`, {
           data: {
-            id: matchingCartItem?.id,
+            id: matchingItem?.id,
             material_image_url: selectedMaterialForDeletion,
           },
         });
 
         // Update the cart after deletion
-        let decreaseQuantity = matchingCartItem.quantity - 1;
+        let decreaseQuantity = matchingItem.quantity - 1;
 
-        // console.log("decreaseQuantity ", decreaseQuantity);
+        // console.log("delete designData.attach_lining ", designData.attach_lining);
         const message = await updateLineItem({
-          lineId: matchingCartItem?.id,
+          lineId: matchingItem?.id,
           quantity: decreaseQuantity,
         })
           .catch((err) => {
@@ -448,9 +325,9 @@ console.log("cart ",cart)
               delete updatedPreferences[selectedMaterialForDeletion];
               return updatedPreferences;
             });
-          });
+          });         
 
-        console.log(message);
+        // console.log(message);
       } catch (error) {
         console.error("Error deleting material image from cart:", error);
       }
@@ -463,7 +340,7 @@ console.log("cart ",cart)
         },
       });
   
-      console.log("All images deleted from the database successfully.");
+      // console.log("All images deleted from the database successfully.");
 
       setDesignPreferencesByImageUrl((prev) => {
         const updatedPreferences = { ...prev };
@@ -475,6 +352,7 @@ console.log("cart ",cart)
     // Update quantity and close modal
     setQuantity((prev) => prev - 1);
     setDeleteConfirmationOpen(false); // Close the modal
+    setDeleteConfirmation(false)
     setSelectedMaterialForDeletion(null); // Reset the selected material
   };
 
@@ -497,6 +375,10 @@ console.log("cart ",cart)
     setSelectedDesignPreferences(designPreferencesByImageUrl[materialImageUrl]);
   };
 
+  // console.log("designPreferencesByImageUrl ",designPreferencesByImageUrl)
+  // console.log("out cartItem ",cartItem)
+
+  // console.log("item id ",cart.items[0].id)
   return (
     <>
       <div className="flex flex-col gap-y-2">
@@ -517,33 +399,26 @@ console.log("cart ",cart)
               <Divider />
             </div>
           )}
+          {variant && (variant.title==="With Lining") && (
+   <p
+   className="text-ui-fg-interactive bg-[#fdecea] border border-[#f5c6cb] p-4 rounded-lg text-small-semi text-center"
+ >
+   Please note: A ₹100 additional fee will be applied for the lining material. Make sure this option is selected only if necessary.
+ </p>
+  )}
         </div>
-
-        {/* Image Upload Section */}
-        <div className="flex flex-col gap-y-4">
-          {/* <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUploadImage}
-            disabled={uploading || !!disabled}
-            style={{ display: "none" }}
-            accept="image/*"
-          /> */}
-          {/* <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading || !!disabled}
-            variant="secondary"
-            className="w-full h-10"
-            isLoading={uploading}
-          >
-            {uploading ? "Uploading..." : "Upload Material Image"}
-          </Button> */}
-        </div>
-
        <div className="flex flex-wrap gap-4">
   {Object.entries(designPreferencesByImageUrl).map(([materialImageUrl], index) => {
     // Check if the current materialImageUrl exists in the cart
-    const existsInCart = cartItem?.material_design_data?.[materialImageUrl];
+    // console.log("cartItem ",cartItem)
+    const existsInCart = variants.some((variant) => {
+      const item = cart?.items?.find((cartItem: LineItemWithDesign) => cartItem.variant_id === variant.id);
+      return item?.material_design_data?.[materialImageUrl];
+    });
+
+    const existsInCurrentCart = cartItem?.material_design_data?.[materialImageUrl];
+
+    // console.log("cart ",cart)
 
     return (
       <div
@@ -560,27 +435,40 @@ console.log("cart ",cart)
         />
 
         {/* Cart Icon */}
-        {!existsInCart && (
+        {/* {!existsInCart && !existsInCurrentCart && (
           <div
             className="absolute top-2 right-2 bg-white rounded-full p-1 flex items-center cursor-pointer hover:scale-110 transition-transform"
-            onClick={() => handleSpecificMaterialAddToCart(materialImageUrl)} // Add material to cart on icon click
-            style={{ boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' }} // Optional: adds subtle shadow to the icon
+            onClick={() => handleSpecificMaterialAddToCart(materialImageUrl)}
+            style={{ boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' }} 
           >
             <FontAwesomeIcon
               icon={faShoppingCart}
-              className="shopping-cart text-lg transition-all duration-200" // Made the icon smaller
+              className="shopping-cart text-lg transition-all duration-200" 
               style={{ color: "#EE0A67" }}
             />
-            <span className="ml-2 text-xs text-gray-700">Add to Cart</span> {/* Made the text smaller */}
+            <span className="ml-2 text-xs text-gray-700">Add to Cart</span> 
           </div>
-        )}
+        )} */}
+
+<div
+            className="absolute top-2 right-2 bg-white rounded-full p-1 flex items-center cursor-pointer hover:scale-110 transition-transform"
+            onClick={() => openDeleteModal(materialImageUrl)}
+            style={{ boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' }} 
+          >
+            <FontAwesomeIcon
+              icon={faTrash}
+              className="shopping-cart text-lg transition-all duration-200" 
+              style={{ color: "#EE0A67" }}
+            />
+            {/* <span className="ml-2 text-xs text-gray-700">Remove from Cart</span>  */}
+          </div>
 
         {/* In Cart / Not in Cart Status */}
-        {existsInCart ? (
+        {/* {existsInCart || existsInCurrentCart ? (
           <p className="text-green-600 text-sm mt-2">In Cart</p>
         ) : (
           <p className="text-red-600 text-sm mt-2">Not in Cart</p>
-        )}
+        )} */}
       </div>
     );
   })}
@@ -588,7 +476,7 @@ console.log("cart ",cart)
 
 
         {/* Quantity Adjustment Section */}
-        {quantity > 0 && (
+        {variant && quantity > 0 && (
           <div className="flex gap-4 mt-4 mb-6">
             <div className="flex items-center justify-between border border-gray-300 rounded-md overflow-hidden">
               <button
@@ -613,6 +501,24 @@ console.log("cart ",cart)
         )}
 
         <ProductPrice product={product} variant={variant} region={region} />
+
+{variant && (quantity > 0 )&& (
+  <Button
+  onClick={handleIncreaseQuantity}
+  disabled={!variant || !!disabled || isAdding}
+  variant="primary"
+  className="w-full h-10 mt-3"
+  isLoading={isAdding}
+  style={{
+    borderRadius: "0px",
+    fontSize: "16px",
+    textTransform: "uppercase",
+    backgroundColor: "#e88b9a", // Mustard yellow for "Add to Cart"
+  }}
+>
+  Customize a {product.title} now
+</Button>
+)}
 
         <Button
   onClick={handleButtonClick}
@@ -647,13 +553,15 @@ console.log("cart ",cart)
             onClose={() => setDesignModalOpen(false)}
             onSubmit={handleDesignPreferencesSubmit}
             categoryId={matchingCategoryId}
+            lineItemId={lineItemId}
             productTitle={product.title}
-            designPreferences={designPreferencesByImageUrl[selectedMaterialImageUrl!] || {}} // Pass preferences for the selected material image URL
-            materialImageUrl={selectedMaterialImageUrl} // Pass the material image URL for the selected material image
+            designPreferences={designPreferencesByImageUrl[selectedMaterialImageUrl!] || {}}
+            materialImageUrl={selectedMaterialImageUrl} 
+            variant={variant} 
           />
         )}
 
-        <MobileActions
+        {/* <MobileActions
           product={product}
           variant={variant}
           region={region}
@@ -664,104 +572,207 @@ console.log("cart ",cart)
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
-        />
+        /> */}
       </div>
 
-      {/* Modal for Image Upload */}
-      <Modal
-        open={modalOpen}
+{/* Camera Upload Modal */}
+<ImageCaptureModal
+        isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        aria-labelledby="modal-title"
-      >
-        <Box
-          sx={{
-            width: 400,
-            backgroundColor: "white",
-            p: 4,
-            margin: "auto",
-            top: "50%",
-            transform: "translateY(-50%)",
-            position: "relative",
-          }}
-        >
-          <h2 id="modal-title">Upload Material Image</h2>
-          <input
-            type="file"
-            onChange={handleUploadImage}
-            accept="image/*"
-            disabled={uploading}
-          />
-          {uploading && <p>Uploading...</p>}
-        </Box>
-      </Modal>
+        productTitle={product.title ?? ""} // Provide a fallback string if product.title is undefined
+        onUpload={handleUploadImage} // Get the uploaded image URL
+      />
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={deleteConfirmationOpen}
-        onClose={() => setDeleteConfirmationOpen(false)}
-        aria-labelledby="delete-confirmation-title"
-      >
-        <Box
-          sx={{
-            width: 400,
-            backgroundColor: "white",
-            p: 4,
-            margin: "auto",
-            top: "50%",
-            transform: "translateY(-50%)",
-            position: "relative",
-          }}
-        >
-          <IconButton
+
+{/* Delete Confirmation Modal */}
+<Modal open={deleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)} aria-labelledby="delete-confirmation-title">
+  <Box
+    sx={{
+      width: { xs: '90vw', sm: '70vw', md: 450 }, // Adjust width based on screen size
+      backgroundColor: "white",
+      p: { xs: 2, md: 4 }, // Adjust padding for responsiveness
+      margin: "auto",
+      top: "50%",
+      transform: "translateY(-50%)",
+      position: "relative",
+      borderRadius: "12px", // Rounded corners for a smoother look
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", // Add a subtle shadow
+    }}
+  >
+    <IconButton
       aria-label="close"
       onClick={() => setDeleteConfirmationOpen(false)}
       sx={{
         position: 'absolute',
-        right: 8,
-        top: 8,
+        right: 16,
+        top: 16,
         color: 'gray',
       }}
     >
       <X />
     </IconButton>
-          <h2 id="delete-confirmation-title">Select Material Image to Delete</h2>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            {Object.entries(designPreferencesByImageUrl).map(
-              ([materialImageUrl], index) => (
-                <div
-                  key={index}
-                  className="mt-2"
-                  onClick={() => setSelectedMaterialForDeletion(materialImageUrl)}
-                  style={{
-                    cursor: "pointer",
-                    border:
-                      selectedMaterialForDeletion === materialImageUrl
-                        ? "2px solid red"
-                        : "1px solid gray",
-                    padding: "5px",
-                  }}
-                >
-                  <img
-                    src={materialImageUrl}
-                    alt={`Material for ${materialImageUrl}`}
-                    className="w-24 h-24 object-cover"
-                  />
-                </div>
-              )
-            )}
-          </div>
-          <Button
-            variant="primary"
-            color="error"
-            onClick={confirmDeleteQuantity}
-            className="w-full mt-4"
-            style={{ backgroundColor: '#b5021d', color: 'white' }}
-            disabled={!selectedMaterialForDeletion} // Disable button if no material image is selected
-          >
-            Confirm Delete
-          </Button>
-        </Box>
-      </Modal>
+    
+    <h2 id="delete-confirmation-title" style={{
+      textAlign: "center",
+      marginBottom: "24px",
+      fontSize: "1.5rem",
+      fontWeight: "500",
+      color: "#333",
+    }}>
+      Select Material Image for {product.title} to Delete
+    </h2>
+
+    <div
+      style={{
+        display: "flex",
+        gap: "16px",
+        flexWrap: "wrap",
+        justifyContent: "center", // Center the images
+      }}
+    >
+      {Object.entries(designPreferencesByImageUrl).map(([materialImageUrl], index) => (
+        <div
+          key={index}
+          className="mt-2"
+          onClick={() => setSelectedMaterialForDeletion(materialImageUrl)}
+          style={{
+            cursor: "pointer",
+            border: selectedMaterialForDeletion === materialImageUrl ? "2px solid red" : "1px solid gray",
+            borderRadius: "8px", // Add subtle rounding to the images
+            padding: "8px",
+            transition: "border 0.3s ease",
+          }}
+        >
+          <img
+            src={materialImageUrl}
+            alt={`Material for ${materialImageUrl}`}
+            className="w-24 h-24 object-cover"
+            style={{
+              borderRadius: "6px", // Slight rounding to image corners
+            }}
+          />
+        </div>
+      ))}
+    </div>
+
+    <Button
+      variant="primary"
+      color="error"
+      onClick={confirmDeleteQuantity}
+      className="responsive-button w-full mt-4" // Apply the responsive-button class
+      style={{
+        backgroundColor: '#b5021d',
+        color: 'white',
+        padding: "12px 0", // Better padding for the button
+        fontSize: "1rem", // Adjust font size for better readability
+        borderRadius: "6px", // Slight rounding for a modern button feel
+        transition: "background-color 0.3s ease", // Add transition for hover effects
+        // width: { xs: "100%", sm: "70%", md: "100%" }, // Responsive button width
+      }}
+      disabled={!selectedMaterialForDeletion} // Disable button if no material image is selected
+    >
+      Confirm Delete
+    </Button>
+  </Box>
+</Modal>
+
+<Modal
+  open={deleteConfirmation}
+  onClose={() => setDeleteConfirmation(false)}
+  aria-labelledby="delete-confirmation-title"
+>
+  <Box
+    sx={{
+      width: { xs: '90vw', sm: '70vw', md: 450 },
+      backgroundColor: "white",
+      p: { xs: 2, md: 4 },
+      margin: "auto",
+      top: "50%",
+      transform: "translateY(-50%)",
+      position: "relative",
+      borderRadius: "12px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    }}
+  >
+    <IconButton
+      aria-label="close"
+      onClick={() => setDeleteConfirmation(false)}
+      sx={{
+        position: 'absolute',
+        right: 16,
+        top: 16,
+        color: 'gray',
+      }}
+    >
+      <X />
+    </IconButton>
+
+    <h2 id="delete-confirmation-title" style={{
+      textAlign: "center",
+      marginBottom: "24px",
+      fontSize: "1.5rem",
+      fontWeight: "500",
+      color: "#333",
+    }}>
+      Confirm Deletion
+    </h2>
+
+    {selectedMaterialForDeletion && (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        marginBottom: "16px",
+      }}>
+        <img
+          src={selectedMaterialForDeletion}
+          alt="Material to be deleted"
+          style={{
+            width: "80%",
+            height: "auto",
+            borderRadius: "8px",
+          }}
+        />
+      </div>
+    )}
+
+    <div style={{
+      display: "flex",
+      gap: "16px",
+      justifyContent: "center",
+    }}>
+      <Button
+        variant="primary"
+        color="error"
+        onClick={confirmDeleteQuantity}
+        style={{
+          backgroundColor: '#b5021d',
+          color: 'white',
+          padding: "12px 24px",
+          fontSize: "1rem",
+          borderRadius: "6px",
+        }}
+      >
+        Delete
+      </Button>
+
+      <Button
+        variant="secondary"
+        onClick={() => setDeleteConfirmation(false)}
+        style={{
+          borderColor: '#888',
+          color: '#555',
+          padding: "12px 24px",
+          fontSize: "1rem",
+          borderRadius: "6px",
+        }}
+      >
+        Cancel
+      </Button>
+    </div>
+  </Box>
+</Modal>
+
+
       <style>
         {`
         div:hover .fa-shopping-cart {
@@ -772,6 +783,25 @@ console.log("cart ",cart)
     color: green;
 
   }
+    /* Add this to your CSS file or style block */
+@media (max-width: 600px) {
+  .responsive-button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 960px) {
+  .responsive-button {
+    width: 70%;
+  }
+}
+
+@media (min-width: 960px) {
+  .responsive-button {
+    width: 100%;
+  }
+}
+
 `}
       </style>
     </>

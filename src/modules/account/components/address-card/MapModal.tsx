@@ -5,9 +5,19 @@ import React, { useEffect, useState } from "react";
 import { Modal, Box, IconButton, TextField, Grid, Button } from "@mui/material";
 import { Address } from "@medusajs/medusa";
 import X from "@modules/common/icons/x"; // X icon imported here
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocation } from "@fortawesome/free-solid-svg-icons"; // Import the location icon
 import "leaflet/dist/leaflet.css"; // Import Leaflet CSS
 import { MEDUSA_BACKEND_URL } from "@lib/config";
 import { LeafletMouseEvent } from "leaflet";
+import {
+  phoneNumberPattern,
+  namePattern,
+  postalCodePattern,
+  cityPattern,
+} from "@lib/util/regex"; // Import the regex patterns
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"; // Warning icon
+
 
 // Dynamically import MapContainer, TileLayer, and Marker from React Leaflet
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
@@ -32,7 +42,6 @@ type MapModalProps = {
   address: Omit<Address, "beforeInsert">; // Updated to omit 'beforeInsert'
 };
 
-
 const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [updatedAddress, setUpdatedAddress] = useState<Omit<Address, "beforeInsert"> | null>(address);
@@ -42,9 +51,22 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
   const [lastName, setLastName] = useState<string>(address.last_name || "");
   const [company, setCompany] = useState<string>(address.company || "");
   const [phone, setPhone] = useState<string>(address.phone || "");
+  const [city, setCity] = useState<string>(address.city || "");
+  const [province, setProvince] = useState<string>(address.province || "");
+  const [postalCode, setPostalCode] = useState<string>(address.postal_code || "");
+
+  // Error states
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    city: "",
+    province: "",
+    postalCode: "",
+  });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && address.latitude && address.longitude) {
+    if (address.latitude && address.longitude) {
       setPosition({ lat: address.latitude, lng: address.longitude });
     } else {
       const geocodeAddress = async (addressString: string) => {
@@ -66,27 +88,21 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
 
   // Component to handle clicking on the map to change marker position and update the address
   const LocationSelector = () => {
-    // useMapEvents must always be called
     const { useMapEvents } = require("react-leaflet");
-  
+
     useMapEvents({
       click: async (e: LeafletMouseEvent) => {
-        if (typeof window === "undefined") return; // Avoid SSR issues
-  
         const newPosition = { lat: e.latlng.lat, lng: e.latlng.lng };
         setPosition(newPosition);
-  
-        // Automatically reverse geocode and update the address
         const newAddress = await reverseGeocode(newPosition.lat, newPosition.lng);
         if (newAddress) {
           setUpdatedAddress(newAddress);
         }
       },
     });
-  
+
     return null;
   };
-
 
   // Function to reverse geocode latitude and longitude into an address using Nominatim API
   const reverseGeocode = async (lat: number, lng: number) => {
@@ -98,7 +114,8 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
         throw new Error("Failed to fetch reverse geocoding data");
       }
       const data = await response.json();
-      console.log("changed location ", data);
+
+      console.log("data ", data.address);
 
       // Extract necessary fields from the response
       const address_1 = [
@@ -110,8 +127,13 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
         .filter(Boolean)
         .join(", ");
 
-        const updatedAddr: Omit<Address, 'beforeInsert'> = {
-          ...address,
+      // Update city, province, postal code based on the response
+      setCity(data.address.state_district || address.city);
+      setProvince(data.address.state || address.province);
+      setPostalCode(data.address.postcode || address.postal_code);
+
+      const updatedAddr: Omit<Address, 'beforeInsert'> = {
+        ...address,
         address_1: address_1 || address.address_1,
         city: data.address.state_district || address.city,
         postal_code: data.address.postcode || address.postal_code,
@@ -129,8 +151,38 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
   };
 
   const handleSaveAddress = async () => {
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      city: "",
+      province: "",
+      postalCode: "",
+    };
+
+    // Validate form fields
+    if (!namePattern.test(firstName)) newErrors.firstName = "First Name should only contain alphabets";
+    if (lastName && !namePattern.test(lastName)) newErrors.lastName = "Last Name should only contain alphabets";
+    if (!phoneNumberPattern.test(phone)) newErrors.phone = "Phone number should start with +91 and be 10 digits.";
+    if (!cityPattern.test(city)) newErrors.city = "City name should only contain alphabets.";
+    if (!cityPattern.test(province)) newErrors.province = "Province name should only contain alphabets.";
+    if (!postalCodePattern.test(postalCode)) newErrors.postalCode = "Postal Code should be a 6-digit number.";
+
+    setErrors(newErrors);
+
+    // Prevent form submission if there are errors
+    if (
+      newErrors.firstName ||
+      newErrors.lastName ||
+      newErrors.phone ||
+      newErrors.city ||
+      newErrors.province ||
+      newErrors.postalCode
+    ) {
+      return;
+    }
+
     if (updatedAddress && position) {
-      // Update the address object with new values from input fields and new position (latitude and longitude)
       const finalAddress = {
         ...updatedAddress,
         first_name: firstName,
@@ -139,43 +191,26 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
         phone: phone,
         latitude: position.lat,
         longitude: position.lng,
+        city: city,
+        province: province,
+        postal_code: postalCode,
       };
 
-      console.log("Updated Address:", finalAddress);
-
-      // Prepare request body for API call
       const requestBody = {
-        customerId: updatedAddress.customer_id, // Assuming the customer ID is part of the address object
-        addressId: updatedAddress.id, // Assuming the address ID is part of the address object
-        newAddress: {
-          first_name: firstName,
-          last_name: lastName,
-          company: company,
-          phone: phone,
-          address_1: finalAddress.address_1,
-          city: finalAddress.city,
-          postal_code: finalAddress.postal_code,
-          country_code: finalAddress.country_code,
-          province: finalAddress.province,
-          latitude: finalAddress.latitude,
-          longitude: finalAddress.longitude,
-        },
+        customerId: updatedAddress.customer_id,
+        addressId: updatedAddress.id,
+        newAddress: finalAddress,
       };
 
-      // Make API request to update the address
       try {
         const response = await fetch(`${MEDUSA_BACKEND_URL}/store/editLatLong`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
         });
 
         if (response.ok) {
-          const data = await response.json();
-          console.log("Address updated successfully:", data);
-          // Close the modal upon successful response
+          // console.log("Address updated successfully");
           onClose();
         } else {
           console.error("Failed to update address:", response.statusText);
@@ -183,6 +218,35 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
       } catch (error) {
         console.error("Error in updating address:", error);
       }
+    }
+  };
+
+  // Function to handle "Use Current Location"
+  const handleUseCurrentLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const latLng = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setPosition(latLng);
+        const newAddress = await reverseGeocode(latLng.lat, latLng.lng);
+        if (newAddress) {
+          setUpdatedAddress(newAddress);
+        }
+      });
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  };
+
+  // Input validation and error clearing logic
+  const handleInputChange = (
+    setter: React.Dispatch<React.SetStateAction<string>>,
+    errorField: keyof typeof errors,
+    pattern: RegExp,
+    value: string
+  ) => {
+    setter(value);
+    if (pattern.test(value)) {
+      setErrors((prevErrors) => ({ ...prevErrors, [errorField]: "" }));
     }
   };
 
@@ -208,26 +272,22 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          fontFamily:"Caudex, serif"
         }}
       >
         <IconButton
           onClick={onClose}
-          sx={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            zIndex: 1000,
-          }}
+          sx={{ position: "absolute", top: 10, right: 10, zIndex: 1000 }}
         >
           <X />
         </IconButton>
 
         {typeof window !== "undefined" && position && (
-          <Box sx={{ height: "45%", mb: 4 }}>
+          <Box sx={{ height: "45%", mb: 1, position: "relative" }}>
             <MapContainer center={position} zoom={15} style={{ height: "100%", width: "100%" }}>
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; Anikaa Designs Solutions'
               />
               <Marker
                 position={position}
@@ -239,97 +299,130 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
               />
               <LocationSelector />
             </MapContainer>
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              className="absolute top-3 right-3 bg-[#e88b9a] text-white py-2 px-4 rounded shadow flex items-center gap-2"
+              style={{ zIndex: 1000 }}
+            >
+              <FontAwesomeIcon icon={faLocation} /> {/* Add the location icon */}
+              Use Current Location
+            </button>
           </Box>
         )}
 
+<div className="flex items-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 mb-3" role="alert">
+  <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-yellow-600" />
+  <p className="text-small-regular">
+    The address auto-filled from the map location may not match your actual address. Please double-check and update the fields with your correct address if necessary.
+  </p>
+</div>
+
         <Grid container spacing={2}>
-            <Grid item xs={6} sm={6}>
-              <TextField
-                label="First Name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={6}>
-              <TextField
-                label="Last Name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={6}>
-              <TextField
-                label="Company"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={6}>
-              <TextField
-                label="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Address"
-                value={updatedAddress?.address_1 || ""}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            {/* Place City, Postal Code, and Province in the same row for screens larger than small */}
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="City"
-                value={updatedAddress?.city || ""}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                label="Postal Code"
-                value={updatedAddress?.postal_code || ""}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                label="Province"
-                value={updatedAddress?.province || ""}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sx={{ textAlign: "center" }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSaveAddress}
-                sx={{ mt: 2, background:"black", borderRadius:"0px",color:"white" }}
-              >
-                Save Edited Address
-              </Button>
-            </Grid>
+          <Grid item xs={6} sm={6}>
+            <TextField
+              label="First Name"
+              value={firstName}
+              onChange={(e) => handleInputChange(setFirstName, "firstName", namePattern, e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={!!errors.firstName}
+              helperText={errors.firstName}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6}>
+            <TextField
+              label="Last Name"
+              value={lastName}
+              onChange={(e) => handleInputChange(setLastName, "lastName", namePattern, e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6}>
+            <TextField
+              label="Company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={6} sm={6}>
+            <TextField
+              label="Phone"
+              value={phone}
+              onChange={(e) => handleInputChange(setPhone, "phone", phoneNumberPattern, e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              error={!!errors.phone}
+              helperText={errors.phone}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Address"
+              value={updatedAddress?.address_1 || ""}
+              variant="outlined"
+              size="small"
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="City"
+              value={city}
+              onChange={(e) => handleInputChange(setCity, "city", cityPattern, e.target.value)}
+              variant="outlined"
+              size="small"
+                className="font-caudex"
+              fullWidth
+              error={!!errors.city}
+              helperText={errors.city}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4}>
+            <TextField
+              label="Postal Code"
+              value={postalCode}
+              onChange={(e) => handleInputChange(setPostalCode, "postalCode", postalCodePattern, e.target.value)}
+              variant="outlined"
+              size="small"
+                className="font-caudex"
+              fullWidth
+              error={!!errors.postalCode}
+              helperText={errors.postalCode}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4}>
+            <TextField
+              label="Province"
+              value={province}
+              onChange={(e) => handleInputChange(setProvince, "province", cityPattern, e.target.value)}
+              variant="outlined"
+              size="small"
+                className="font-caudex"
+              fullWidth
+              error={!!errors.province}
+              helperText={errors.province}
+            />
+          </Grid>
+          <Grid item xs={12} sx={{ textAlign: "center" }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSaveAddress}
+              sx={{ mt: 2, background: "#6e323b", borderRadius: "0px", color: "white", fontFamily:"Caudex, serif" }}
+            >
+              Save Edited Address
+            </Button>
+          </Grid>
         </Grid>
       </Box>
     </Modal>

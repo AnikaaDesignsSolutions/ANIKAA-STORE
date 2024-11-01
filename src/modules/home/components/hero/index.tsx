@@ -2,11 +2,13 @@
 import React, { useState, useEffect, useRef, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import './Hero.css';
+import ProductModal from "./ProductList";
 
 const Hero = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [screenWidth, setScreenWidth] = useState<number>(0);
   const [screenHeight, setScreenHeight] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState(true); // State to control modal visibility
   const router = useRouter();
 
   const [showTooltip, setShowTooltip] = useState(false);
@@ -16,7 +18,7 @@ const Hero = () => {
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
     setTooltipPosition({
       x: event.clientX,
-      y: event.clientY
+      y: event.clientY,
     });
   };
 
@@ -27,10 +29,10 @@ const Hero = () => {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -48,53 +50,68 @@ const Hero = () => {
         }
       };
 
-      videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+      videoRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
 
       return () => {
         if (videoRef.current) {
-          videoRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+          videoRef.current.removeEventListener(
+            "loadedmetadata",
+            handleLoadedMetadata
+          );
         }
       };
     }
   }, []);
 
   const navigateToStore = () => {
-    console.log("clicked navigate to store")
-    router.push('/explore/store');
+    console.log("clicked navigate to store");
+    router.push("/explore/products/gown");
   };
 
   const scrollToNextSection = () => {
-    const nextSection = document.getElementById('next-section');
+    const nextSection = document.getElementById("next-section");
     if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth' });
+      nextSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   const scrollToDiscountCarousel = () => {
-    const discountCarousel = document.getElementById('discount-carousel');
+    const discountCarousel = document.getElementById("discount-carousel");
     if (discountCarousel) {
-      discountCarousel.scrollIntoView({ behavior: 'smooth' });
+      discountCarousel.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   return (
     <div className="hero-container">
-      <video 
+      {/* Display the modal when isModalOpen is true */}
+      {isModalOpen && (
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)} // Close modal handler
+        />
+      )}
+      
+      <video
         ref={videoRef}
         className="fullscreen-video"
-        src="/bg_video21.mp4" 
-        autoPlay 
-        loop 
-        muted 
-        playsInline 
+        src="/bg_video21.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
       ></video>
       <div className="video-overlay"></div>
       <div className="banner-text">
-        <h1 className="font-sofia">Create Your Perfect Dress</h1>
+        <h1 className="font-sofia">Tailor Your Dream Gown</h1>
         <p className="font-sofia">
-          Share your design, and we&apos;ll tailor it to perfection.
+          Upload your gown design, provide your measurements, and let us craft
+          it to perfection. From pickup to doorstep delivery, we handle every
+          step.
         </p>
-        <button className="scroll-button" onClick={navigateToStore}>Discover More</button>
+        <button className="scroll-button" onClick={navigateToStore}>
+          Start Your Custom Design
+        </button>
       </div>
     </div>
   );

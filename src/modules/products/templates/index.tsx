@@ -28,6 +28,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
     return notFound()
   }
 
+  console.log("product ",product)
   return (
     <>
       <div
@@ -66,9 +67,9 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       </div>
 
       <div className="content-container">
-      <div className="mb-4 mt-5">
+      {/* <div className="mb-4 mt-5">
           <ProductDescription product={product} />
-        </div>
+        </div> */}
         <div className="mb-4 mt-5">
           <ProductTabs product={product} />
         </div>

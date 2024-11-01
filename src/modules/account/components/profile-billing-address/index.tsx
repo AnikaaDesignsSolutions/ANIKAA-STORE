@@ -7,22 +7,11 @@ import NativeSelect from "@modules/common/components/native-select"
 import AccountInfo from "../account-info"
 import { useFormState } from "react-dom"
 import { updateCustomerBillingAddress } from "@modules/account/actions"
+import MapSelector from "./MapSelector" // Import the MapSelector component
+import { Button } from "@medusajs/ui"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"; // Warning icon
 
-// Import necessary Leaflet components
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
-import "leaflet/dist/leaflet.css"
-import L from "leaflet"
-
-// Define a custom marker icon with the provided iconUrl
-const customIcon = new L.Icon({
-  iconUrl: "https://leafletjs.com/examples/custom-icons/leaf-green.png",
-  iconSize: [38, 95], // size of the icon
-  iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
-  popupAnchor: [-3, -76], // point from which the popup should open relative to the iconAnchor
-  shadowUrl: "https://leafletjs.com/examples/custom-icons/leaf-shadow.png",
-  shadowSize: [50, 64], // size of the shadow
-  shadowAnchor: [4, 62], // the same for the shadow
-})
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
@@ -46,7 +35,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     )
   }, [regions])
 
-  const [successState, setSuccessState] = React.useState(false)
+  const [successState, setSuccessState] = useState(false)
   const [state, formAction] = useFormState(updateCustomerBillingAddress, {
     error: false,
     success: false,
@@ -60,23 +49,10 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     setBillingAddressId(null) // Reset the billing address id when state is cleared
   }
 
-  useEffect(() => {
-    if (state.success) {
-      // Assuming `state` contains the response data with the new billing address id
-        setBillingAddressId(customer.billing_address_id)
-      
-      // console.log("customer.billing_address ",customer.billing_address)
-      // console.log("customer.billing_address_id ",customer.billing_address_id)
-
-
-      // console.log("billingAddressId ",billingAddressId)
-      setSuccessState(true)
-    }
-  }, [state])
-
   // Initial location for the map
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null)
   const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null)
+
   const [addressData, setAddressData] = useState<any>(null) // Store the address data
 
   // Form field states
@@ -85,6 +61,8 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
   const [city, setCity] = useState<string>(customer.billing_address?.city || "")
   const [postalCode, setPostalCode] = useState<string>(customer.billing_address?.postal_code || "")
   const [province, setProvince] = useState<string>(customer.billing_address?.province || "")
+  const [latitude, setLatitude] = useState<string>(customer.billing_address?.latitude ? String(customer.billing_address.latitude) : "")
+  const [longitude, setLongitude] = useState<string>(customer.billing_address?.longitude ? String(customer.billing_address.longitude) : "")
 
   useEffect(() => {
     // Check if latitude and longitude already exist in customer.billing_address
@@ -107,27 +85,58 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     }
   }, [customer.billing_address])
 
-  // Function to handle map clicks to set the marker
-  const MapClickHandler = () => {
-    useMapEvents({
-      click(e) {
-        setMarkerPosition([e.latlng.lat, e.latlng.lng])
-      },
-    })
-    return null
-  }
+  useEffect(() => {
+    if (state.success) {
+      setBillingAddressId(customer.billing_address_id)
 
-  // Function to handle the "Set Location" button click
+      // Construct the request body to send to the API
+      const requestBody = {
+        customerId: customer.id, // Assuming customer has an `id` field
+        addressId: customer.billing_address.id, // Use billing address id
+        newAddress: {
+          latitude: markerPosition ? markerPosition[0] : customer.billing_address.latitude,
+          longitude: markerPosition ? markerPosition[1] : customer.billing_address.longitude,
+          first_name: customer.billing_address.first_name,
+          last_name: customer.billing_address.last_name,
+          city: customer.billing_address.city,
+          country_code: customer.billing_address.country_code,
+          address_1: customer.billing_address.address_1,
+          postal_code: customer.billing_address.postal_code,
+          company: customer.billing_address.company,
+          metadata: customer.billing_address.metadata,
+        }
+      }
+
+      // POST request to your API to update the billing address with latitude and longitude
+      fetch('http://localhost:9000/store/editLatitudeLongitude', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (markerPosition) {
+            setLatitude(String(markerPosition[0])) // Convert number to string
+            setLongitude(String(markerPosition[1])) // Convert number to string
+          }
+        })
+        .catch(error => {
+          console.error('Error updating billing address:', error)
+        })
+
+      setSuccessState(true)
+    }
+  }, [state])
+
   const handleSetLocation = async () => {
     if (markerPosition) {
-      // Use Nominatim (OpenStreetMap) Reverse Geocoding API to get address
       const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${markerPosition[0]}&lon=${markerPosition[1]}`
-
       try {
         const response = await fetch(apiUrl)
         const data = await response.json()
 
-        // Exclude ISO3166-2-lvl4, country, country_code, state, and state_district from address1
         const addressComponents = [
           data.address.road,
           data.address.house_number,
@@ -138,14 +147,11 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
         ].filter(Boolean).join(", ")
 
         setAddress1(addressComponents)
-        setCountryCode(data.address.country_code.toUpperCase())
+        setCountryCode(data.address.country_code.toLowerCase())
         setCity(data.address.state_district)
         setPostalCode(data.address.postcode)
         setProvince(data.address.state)
 
-        console.log("Changed location:", data)
-
-        // Update customer.billing_address with latitude and longitude
         customer.billing_address.latitude = markerPosition[0]
         customer.billing_address.longitude = markerPosition[1]
       } catch (error) {
@@ -153,6 +159,18 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
       }
     } else {
       console.log("No location set.")
+    }
+  }
+
+  const handleUseCurrentLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const latLng: [number, number] = [position.coords.latitude, position.coords.longitude]
+        setCurrentPosition(latLng)
+        setMarkerPosition(latLng)
+      })
+    } else {
+      console.error("Geolocation is not supported by this browser.")
     }
   }
 
@@ -188,8 +206,6 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     )
   }, [customer, regionOptions])
 
-  console.log("customer ", customer.billing_address)
-
   return (
     <form
       action={formAction}
@@ -222,7 +238,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
               label="Last name"
               name="billing_address.last_name"
               defaultValue={customer.billing_address?.last_name || undefined}
-              required
+              // required
               data-testid="billing-last-name-input"
             />
           </div>
@@ -234,28 +250,25 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             data-testid="billing-company-input"
           />
 
-          {/* Map for selecting the location */}
-          <div className="my-4">
-            <h3>Select Location on Map:</h3>
-            {currentPosition ? (
-              <MapContainer
-                center={currentPosition}
-                zoom={13}
-                style={{ height: "400px", width: "100%" }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                {markerPosition && (
-                  <Marker position={markerPosition} icon={customIcon} />
-                )}
-                <MapClickHandler />
-              </MapContainer>
-            ) : (
-              <p>Loading map...</p>
-            )}
-          </div>
+          {/* Render MapSelector component */}
+          <MapSelector 
+            currentPosition={currentPosition} 
+            markerPosition={markerPosition} 
+            setMarkerPosition={setMarkerPosition} 
+          />
+
+          {/* Button to use the current location */}
+          {/* <Button
+            type="button"
+            onClick={handleUseCurrentLocation} // Handle current location click
+            className="mt-4 p-3 text-md text-white"
+            style={{
+              backgroundColor: '#007bff',
+              borderRadius: '4px',
+            }}
+          >
+            Use Current Location
+          </Button> */}
 
           {/* Display fetched address if available */}
           {addressData && (
@@ -278,14 +291,35 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
           )}
 
           {/* Set Location Button */}
-          <button
+          <Button
             type="button"
             onClick={handleSetLocation}
-            className="mt-4 p-2 bg-blue-500 text-white rounded"
+            className="mt-2 mb-2 p-3 ml-6 text-md text-white"
+            style={{
+              backgroundColor: '#6e323b',  // setting the background color
+              borderRadius: '0px',  // removing the border radius
+              width: '120px',  // setting a fixed width
+              height: '30px',  // setting a fixed height
+            }}
           >
             Set Location
-          </button>
+          </Button>
 
+{address1 &&(
+          <div className="flex items-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-2" role="alert">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-yellow-600" />
+          <p className="text-sm">
+            The address auto-filled from the map location may not match your actual address. Please double-check and update the fields with your correct address if necessary.
+          </p>
+        </div>
+)}
+
+<Input
+            label="Landmark"
+            name="billing_address.address_2"
+            defaultValue={customer.billing_address?.address_2 || undefined}
+            data-testid="billing-address-2-input"
+          />
           <Input
             label="Address"
             name="billing_address.address_1"
@@ -293,12 +327,6 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             required
             data-testid="billing-address-1-input"
             onChange={(e) => setAddress1(e.target.value)}
-          />
-          <Input
-            label="Apartment, suite, etc."
-            name="billing_address.address_2"
-            defaultValue={customer.billing_address?.address_2 || undefined}
-            data-testid="billing-address-2-input"
           />
           <div className="grid grid-cols-[144px_1fr] gap-x-2">
             <Input

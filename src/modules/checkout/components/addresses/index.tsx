@@ -20,6 +20,8 @@ import { SubmitButton } from "../submit-button"
 import { useFormState } from "react-dom"
 import ErrorMessage from "../error-message"
 import compareAddresses from "@lib/util/compare-addresses"
+import { useEffect } from "react"
+import axios from "axios"
 
 const Addresses = ({
   cart,
@@ -48,6 +50,34 @@ const Addresses = ({
   }
 
   const [message, formAction] = useFormState(setAddresses, null)
+  
+  const shouldDisplayEmail = cart?.email && !cart?.email.endsWith("@unidentified.com")
+
+ // Function to fetch email based on phone number
+ const fetchEmailByPhone = async (phoneNo: string) => {
+  try {
+    const response = await axios.get("http://localhost:9000/store/getEmailforPassword", {
+      params: { phoneNo }, // Send phone number to get the associated email
+    });
+    const data = response.data;
+    if (data.customer && data.customer.email) {
+      console.log("Fetched email from API:", data.customer.email);
+    } else {
+      console.log("No email found for this phone number.");
+    }
+  } catch (error) {
+    console.error("Error fetching email from phone:", error);
+  }
+};
+
+// UseEffect to trigger fetch when phone number from shipping address changes
+useEffect(() => {
+  if (cart?.shipping_address?.phone) {
+    console.log("Shipping address phone number:", cart.shipping_address.phone);
+    fetchEmailByPhone(cart.shipping_address.phone);
+  }
+}, [cart?.shipping_address?.phone]); // Re-run when the phone number changes
+
 
   return (
     <div className="bg-white">
@@ -103,8 +133,8 @@ const Addresses = ({
           <div className="text-small-regular">
             {cart && cart.shipping_address ? (
               <div className="flex items-start gap-x-8">
-                <div className="flex items-start gap-x-1 w-full">
-                  <div className="flex flex-col w-1/3" data-testid="shipping-address-summary">
+<div className="flex items-start gap-x-1 w-full flex-col sm:flex-row gap-y-4 sm:gap-y-0">
+<div className="flex flex-col w-1/2" data-testid="shipping-address-summary">
                     <Text className="txt-medium-plus text-ui-fg-base mb-1">
                       Shipping Address
                     </Text>
@@ -124,20 +154,7 @@ const Addresses = ({
                       {cart.shipping_address.country_code?.toUpperCase()}
                     </Text>
                   </div>
-
-                  <div className="flex flex-col w-1/3 " data-testid="shipping-contact-summary">
-                    <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                      Contact
-                    </Text>
-                    <Text className="txt-medium text-ui-fg-subtle">
-                      {cart.shipping_address.phone}
-                    </Text>
-                    <Text className="txt-medium text-ui-fg-subtle">
-                      {cart.email}
-                    </Text>
-                  </div>
-
-                  <div className="flex flex-col w-1/3" data-testid="billing-address-summary">
+                  <div className="flex flex-col w-1/2" data-testid="billing-address-summary">
                     <Text className="txt-medium-plus text-ui-fg-base mb-1">
                       Billing Address
                     </Text>
@@ -164,6 +181,20 @@ const Addresses = ({
                           {cart.billing_address.country_code?.toUpperCase()}
                         </Text>
                       </>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col w-full " data-testid="shipping-contact-summary">
+                    <Text className="txt-medium-plus text-ui-fg-base mb-1">
+                      Contact
+                    </Text>
+                    <Text className="txt-medium text-ui-fg-subtle">
+                      {cart.shipping_address.phone}
+                    </Text>
+                    {shouldDisplayEmail && (
+                    <Text className="txt-medium text-ui-fg-subtle">
+                      {cart.email}
+                    </Text>
                     )}
                   </div>
                 </div>

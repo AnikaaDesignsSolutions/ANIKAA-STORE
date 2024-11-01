@@ -194,9 +194,9 @@ const CartDropdown = ({
                   </div>
                   <LocalizedClientLink href="/explore/cart" passHref>
                     <Button
-                      className="w-full"
+                      className="w-full btn-custom"
                       size="large"
-                      data-testid="go-to-cart-button"
+                      data-testid="go-to-cart-button "
                     >
                       Go to cart
                     </Button>
@@ -206,15 +206,15 @@ const CartDropdown = ({
             ) : (
               <div>
                 <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
-                  <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
-                    <span>0</span>
+                  <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white btn-second-custom">
+                    <span >0</span>
                   </div>
                   <span>Your shopping bag is empty.</span>
                   <div>
                     <LocalizedClientLink href="/explore/store">
                       <>
                         <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
+                        <Button onClick={close} className="btn-second-custom" style={{borderRadius:"0px"}}>Explore products</Button>
                       </>
                     </LocalizedClientLink>
                   </div>

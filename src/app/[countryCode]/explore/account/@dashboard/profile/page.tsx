@@ -6,7 +6,7 @@ import ProfileClient from "./ProfileClient"; // Import the client-side component
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "View and edit your Medusa Store profile.",
+  description: "View and edit your Anikaa Store profile.",
 };
 
 export default async function ProfilePage() {

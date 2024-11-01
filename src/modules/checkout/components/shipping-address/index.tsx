@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Address, Cart, Customer } from "@medusajs/medusa";
+import { updateCustomerEmail } from "@modules/account/actions";
 import Checkbox from "@modules/common/components/checkbox";
 import Input from "@modules/common/components/input";
 import AddressSelect from "../address-select";
@@ -10,6 +11,13 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { namePattern, cityPattern, postalCodePattern, phoneNumberPattern, emailPattern } from "@lib/util/regex"; // Make sure emailPattern is imported correctly
 import ErrorMessage from "../error-message";
+import Medusa from "@medusajs/medusa-js"
+import { MEDUSA_BACKEND_URL } from "@lib/config";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faLocation } from "@fortawesome/free-solid-svg-icons" // Import the location icon
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"; // Warning icon
+
 
 // Set up Leaflet marker icon to avoid default icon issue
 // delete L.Icon.Default.prototype._getIconUrl;
@@ -43,6 +51,8 @@ const LocationMarker = ({ clickedLocation, setClickedLocation }: { clickedLocati
     <Marker position={clickedLocation} icon={pinkMarkerIcon} />
   );
 };
+
+const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 });
 
 const ShippingAddress = ({
   customer,
@@ -88,7 +98,8 @@ const ShippingAddress = ({
     "shipping_address.country_code":
       cart?.shipping_address?.country_code || countryCode || "",
     "shipping_address.province": cart?.shipping_address?.province || "",
-    email: cart?.email || "",
+    // email: cart?.email || "",
+    email: cart?.email?.endsWith("@unidentified.com") ? "" : cart?.email || "", // Set email to empty string if it ends with @unidentified.com
     "shipping_address.phone": cart?.shipping_address?.phone || "",
     "shipping_address.latitude": specificShippingAddress?.latitude || null,
     "shipping_address.longitude": specificShippingAddress?.longitude || null,
@@ -101,11 +112,45 @@ const ShippingAddress = ({
     province: "",
     postal_code: "",
     phone: "",
-    email: "", // Error state for email
+    email: "", 
+    emailOrPhone: "",
   });
+
+  // const validateEmailOrPhone = (email: string, phone: string) => {
+  //   if (!email && !phone) {
+  //     setErrors((prevErrors) => ({
+  //       ...prevErrors,
+  //       emailOrPhone: "Either email or phone number is required.",
+  //     }));
+  //     return false;
+  //   } else {
+  //     setErrors((prevErrors) => ({
+  //       ...prevErrors,
+  //       emailOrPhone: "", // Clear the error if at least one field is filled
+  //     }));
+  //     return true;
+  //   }
+  // };
 
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
+
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+
+  // Fetch geolocation to get current location coordinates
+  const handleUseCurrentLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation([latitude, longitude]);
+        setClickedLocation([latitude, longitude]);
+        setUseCurrentLocation(true);
+      },
+      (error) => {
+        console.error("Error getting location: ", error);
+      }
+    );
+  };
 
   // Fetch the current location if latitude and longitude are not available
   useEffect(() => {
@@ -147,74 +192,129 @@ const ShippingAddress = ({
       "shipping_address.city": cart?.shipping_address?.city || "",
       "shipping_address.country_code": cart?.shipping_address?.country_code || "",
       "shipping_address.province": cart?.shipping_address?.province || "",
-      email: cart?.email || "",
+      // email: cart?.email || "",
+      email: cart?.email?.endsWith("@unidentified.com") ? "" : cart?.email || "", // Set email to empty string if it ends with @unidentified.com
       "shipping_address.phone": cart?.shipping_address?.phone || "",
       "shipping_address.latitude": specificShippingAddress?.latitude || null,
       "shipping_address.longitude": specificShippingAddress?.longitude || null,
     });
   }, [cart?.shipping_address, cart?.email]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLInputElement | HTMLSelectElement
-    >
-  ) => {
+  // Function to fetch email using the phone number
+  const fetchEmailFromPhone = async (phoneNo: string) => {
+    try {
+      const response = await axios.get("http://localhost:9000/store/getEmailforPassword", {
+        params: { phoneNo }, // Send phone number to get the associated email
+      });
+
+      const data = response.data;
+
+      if (data.customer && data.customer.email) {
+        setFormData((prevData) => ({
+          ...prevData,
+          email: data.customer.email, // Set email from the API response
+        }));
+        console.log("Email fetched: ", data.customer.email);
+      } else {
+        setFormData((prevData) => ({
+          ...prevData,
+          email: `${phoneNo}@unidentified.com`, // Fallback email if no customer is found
+        }));
+        console.log("No customer found, setting email to fallback");
+      }
+    } catch (error) {
+      console.error("Error fetching email from phone:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    if (!formData.email) {
+      console.log("Email is missing, fetching based on phone number:", formData["shipping_address.phone"]);
+      if (formData["shipping_address.phone"]) {
+        fetchEmailFromPhone(formData["shipping_address.phone"]); // Fetch email using the phone number
+      }
+    } else {
+      console.log("Email on mount:", formData["email"]);
+    }
+  }, [formData.email, formData["shipping_address.phone"]]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === "shipping_address.phone" && value) {
+      fetchEmailFromPhone(value); // Fetch email based on the entered phone number
+    }
+
     setFormData({
       ...formData,
       [name]: value,
     });
 
-    // Validate input values
-    validateField(name, value);
-  };
+    // console.log("before validateField formData ",formData)
+
+    validateField(name, value); // Validate the field
+
+    // if (name === "email") {
+    //   console.log("cartid ", cart?.id);
+    //   console.log("Email value entered: ", value);
+  
+    //   if ((cart?.email?.endsWith("@unidentified.com") || customer?.email?.endsWith("@unidentified.com")) && cart?.id) {
+    //     medusa.carts.update(cart.id, {
+    //       email: value, // Use the newly entered email
+    //     })
+    //     .then(({ cart }) => {
+    //       console.log("Cart updated with new email:", cart.email);
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error updating cart email:", error);
+    //     });
+  
+    //     console.log("handleChange cart ", cart);
+    //     console.log("handleChange customer ", customer);
+  
+    //     if (customer?.id) {
+    //       axios.post('http://localhost:9000/store/updateCustomerEmail', {
+    //         id: customer.id, // Pass customer id from customer object
+    //         email: value // Use the newly entered email
+    //       })
+    //       .then(response => {
+    //         console.log("Customer email updated successfully:", response.data);
+    //       })
+    //       .catch(error => {
+    //         console.error("Error updating customer email:", error);
+    //       });
+    //     } else {
+    //       console.error("No customer ID found for email update.");
+    //     }
+    //   } else {
+    //     console.error("Cart ID is missing or invalid.");
+    //   }
+    // }
+  };  
 
   const validateField = (name: string, value: string) => {
     let errorMsg = "";
-
-    // console.log("names value ",name)
-
     if (name === "shipping_address.first_name" || name === "shipping_address.last_name") {
-      if (!namePattern.test(value)) {
-        errorMsg = "Invalid name format";
-      }
+      if (!namePattern.test(value)) errorMsg = "Invalid name format";
     } else if (name === "shipping_address.city") {
-      if (!cityPattern.test(value)) {
-        errorMsg = "Invalid city name format";
-      }
+      if (!cityPattern.test(value)) errorMsg = "Invalid city name format";
     } else if (name === "shipping_address.province") {
-      if (!cityPattern.test(value)) {
-        errorMsg = "Invalid State name format";
-      }
+      if (!cityPattern.test(value)) errorMsg = "Invalid State name format";
     } else if (name === "shipping_address.postal_code") {
-      if (!postalCodePattern.test(value)) {
-        errorMsg = "Invalid postal code";
-      }
+      if (!postalCodePattern.test(value)) errorMsg = "Invalid postal code";
     } else if (name === "email") {
-      // Validate email format
-      console.log("email value ",value)
-      if (!emailPattern.test(value)) {
-        console.log("no emailpattern ")
-
-        errorMsg = "Invalid email format";
-      }
+      if (!emailPattern.test(value)) errorMsg = "Invalid email format";
     } else if (name === "shipping_address.phone") {
-      if (!phoneNumberPattern.test(value)) {
-        errorMsg = "Invalid phone number";
-      }
+      if (!phoneNumberPattern.test(value)) errorMsg = "Invalid phone number";
     }
-
-console.log("errorMsg ",errorMsg)
-    console.log(`Validating field: ${name}, Error Message: ${errorMsg}`);
 
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name.split(".")[1]]: errorMsg,
     }));
-
-    console.log("errors ",errors)
-
   };
+
 
   const handleSetLocation = () => {
     if (clickedLocation) {
@@ -263,15 +363,15 @@ console.log("errorMsg ",errorMsg)
       console.log("No location has been selected yet.");
     }
   };
-  console.log("errors.province ", errors.province);
+  // console.log("errors.province ", errors.province);
 
-  console.log("errors.email ", errors.email);
+  // console.log("errors.email ", errors.email);
 
-  
+  // console.log("cart",cart)
   return (
     <>
       {customer && (addressesInRegion?.length || 0) > 0 && (
-        <Container className="mb-6 flex flex-col gap-y-4 p-5">
+        <Container className="mb-6 flex flex-col gap-y-4 p-5 z-20 relative">
           <p className="text-small-regular">
             {`Hi ${customer.first_name}, do you want to use one of your saved addresses?`}
           </p>
@@ -307,7 +407,7 @@ console.log("errorMsg ",errorMsg)
 
       {/* Show Map if latitude and longitude exist, otherwise show current location */}
       {(formData["shipping_address.latitude"] && formData["shipping_address.longitude"]) || currentLocation ? (
-  <div className="mt-4 mb-4">
+  <div className="mt-4 mb-4 relative z-10 ">
     <h3 className="text-small-regular">Map Location</h3>
     <MapContainer
       center={
@@ -320,7 +420,7 @@ console.log("errorMsg ",errorMsg)
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; Anikaa Designs Solutions'
       />
       {/* Conditionally render the marker only if there are valid coordinates */}
       {(formData["shipping_address.latitude"] && formData["shipping_address.longitude"]) || currentLocation ? (
@@ -335,23 +435,35 @@ console.log("errorMsg ",errorMsg)
       {/* Pink Marker that moves based on user clicks */}
       <LocationMarker clickedLocation={clickedLocation} setClickedLocation={setClickedLocation} />
     </MapContainer>
+    <div className="flex justify-between items-center mt-4">
+  <button
+    type="button"
+    className="px-2 py-1 bg-[#6e323b] text-white text-small-semi"
+    onClick={handleSetLocation}
+  >
+    Set Location
+  </button>
 
-    {/* Set Location button */}
-    <div className="mt-4">
-      <button
-        type="button"
-        className="px-4 py-2 bg-blue-500 text-white rounded"
-        onClick={handleSetLocation}
-      >
-        Set Location
-      </button>
-    </div>
+  <button
+    type="button"
+    className="px-2 py-1 bg-[#e88b9a] text-white text-small-semi flex items-center"
+    onClick={handleUseCurrentLocation}
+  >
+    <FontAwesomeIcon icon={faLocation} className="mr-2" />
+    Use Current Location
+  </button>
+</div>
+
   </div>
 ) : (
   <p className="text-small-regular">Unable to display map: No coordinates available.</p>
 )}
-
-
+      <div className="flex items-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-2" role="alert">
+  <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-yellow-600" />
+  <p className="text-sm">
+    The address auto-filled from the map location may not match your actual address. Please double-check and update the fields with your correct address if necessary.
+  </p>
+</div>
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Address"
@@ -416,6 +528,7 @@ console.log("errorMsg ",errorMsg)
           <ErrorMessage error={errors.province} data-testid="province-error" />
         )}
       </div>
+
       <div className="my-8">
         <Checkbox
           label="Billing address same as shipping address"
@@ -426,6 +539,7 @@ console.log("errorMsg ",errorMsg)
         />
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="hidden">
         <Input
           label="Email"
           name="email"
@@ -434,12 +548,12 @@ console.log("errorMsg ",errorMsg)
           autoComplete="email"
           value={formData.email}
           onChange={handleChange}
-          required
           data-testid="shipping-email-input"
         />
         {errors.email && (
           <ErrorMessage error={errors.email} data-testid="email-error" />
         )}
+        </div>
         <Input
           label="Phone"
           name="shipping_address.phone"
@@ -457,3 +571,5 @@ console.log("errorMsg ",errorMsg)
 };
 
 export default ShippingAddress;
+
+

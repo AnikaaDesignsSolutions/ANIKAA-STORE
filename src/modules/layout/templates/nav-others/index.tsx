@@ -45,7 +45,7 @@ export default async function Nav() {
                         {parentCategories.map((category) => (
                             <LocalizedClientLink
                                 key={category.id}
-                                href={`/explore/categories/${category.handle}`}
+                                href={`/explore/products/${category.handle}`}
                                 className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
                                 data-testid={`nav-category-link-${category.id}`}
                             >

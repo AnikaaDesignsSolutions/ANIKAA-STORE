@@ -176,7 +176,7 @@ const Shipping: React.FC<ShippingProps> = ({
                     includeTaxes: false,
                   })
                     .replace(/,/g, "")
-                    .replace(/\./g, ",")}
+                    .replace(/\./g, ".")}
                   )
                 </Text>
               </div>

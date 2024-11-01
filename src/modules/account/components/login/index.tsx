@@ -1,81 +1,157 @@
-import { useFormState } from "react-dom"
+import { useFormState } from "react-dom";
+import { LOGIN_VIEW } from "@modules/account/templates/login-template";
+import Input from "@modules/common/components/input";
+import { logCustomerIn } from "@modules/account/actions";
+import ErrorMessage from "@modules/checkout/components/error-message";
+import { SubmitButton } from "@modules/checkout/components/submit-button";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { MEDUSA_BACKEND_URL } from "@lib/config";
+import Medusa from "@medusajs/medusa-js";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify"; // Import toast functions and container
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 
-import { LOGIN_VIEW } from "@modules/account/templates/login-template"
-import Input from "@modules/common/components/input"
-import { logCustomerIn } from "@modules/account/actions"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
-import { useState } from "react"
+const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 });
 
 type Props = {
-  setCurrentView: (view: LOGIN_VIEW) => void
-}
+  setCurrentView: (view: LOGIN_VIEW) => void;
+};
 
 const Login = ({ setCurrentView }: Props) => {
-  const [message, formAction] = useFormState(logCustomerIn, null)
-  
+  const [message, formAction] = useFormState(logCustomerIn, null);
+  const router = useRouter();
+
   // State to manage form inputs
   const [formData, setFormData] = useState({
     emailOrPhone: "",
-    password: ""
-  })
+    password: "",
+  });
 
   // Update form data state
   const handleInputChange = (e: any) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
-    })
-  }
+      [name]: value,
+    });
+  };
 
   // Form submission handling
-  const handleFormSubmit = (e: any) => {
-    e.preventDefault()
+  const handleFormSubmit = async (e: any) => {
+    e.preventDefault();
 
     // Define dataToSubmit to allow both email and password
     let dataToSubmit: { password: string; email?: string } = {
-      password: formData.password
-    }
+      password: formData.password,
+    };
 
     // Check if the input is an email or phone number
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailPattern.test(formData.emailOrPhone)) {
       // If the input matches an email pattern
-      console.log("email ", formData.emailOrPhone)
-
       dataToSubmit = {
         ...dataToSubmit,
-        email: formData.emailOrPhone
-      }
+        email: formData.emailOrPhone,
+      };
     } else if (/^\+?[0-9\s\-()]+$/.test(formData.emailOrPhone)) {
       // If the input contains valid phone characters, treat it as a phone number
-      console.log("phone number ", formData.emailOrPhone)
+      console.log(`Phone number ${formData.emailOrPhone} is entered in the input field`);
 
-      // Instead of removing non-digits, use the original input with symbols included
-      dataToSubmit = {
-        ...dataToSubmit,
-        email: `${formData.emailOrPhone}@unidentified.com`
+      // Make the API call to check if the phone number exists
+      try {
+        const response = await axios.get(
+          `http://localhost:9000/store/getEmailforPassword`,
+          {
+            params: {
+              phoneNo: formData.emailOrPhone,
+            },
+          }
+        );
+        const data = response.data;
+
+        // Set email using phone number or use the actual email from API response if available
+        dataToSubmit = {
+          ...dataToSubmit,
+          email: data.customer?.email || `${formData.emailOrPhone}@unidentified.com`,
+        };
+
+        console.log(data.customer.email); // Display response data on the console
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Error retrieving account information.");
+        return;
       }
-      
-      console.log("dataToSubmit ", dataToSubmit)
     } else {
-      console.log("neither ", formData.emailOrPhone)
-
-      // If input doesn't match either, show an error
-      alert("Please enter a valid email address or phone number.")
-      return
+      alert("Please enter a valid email address or phone number.");
+      return;
     }
 
     // Convert dataToSubmit to FormData instance
-    const formDataToSubmit = new FormData()
+    const formDataToSubmit = new FormData();
     Object.entries(dataToSubmit).forEach(([key, value]) => {
-      formDataToSubmit.append(key, value)
-    })
+      formDataToSubmit.append(key, value);
+    });
 
     // Submit the form
-    formAction(formDataToSubmit)
-  }
+    formAction(formDataToSubmit);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.emailOrPhone) {
+      alert("Please enter your email or phone number first.");
+      return;
+    }
+  
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let emailOrPhone = formData.emailOrPhone;
+  
+    // Check if the input is a phone number or an email
+    if (!emailPattern.test(emailOrPhone)) {
+      // It's a phone number, so let's check if it exists using the API
+      try {
+        const response = await axios.get(
+          `http://localhost:9000/store/getEmailforPassword`,
+          {
+            params: {
+              phoneNo: formData.emailOrPhone,
+            },
+          }
+        );
+  
+        const data = response.data;
+  
+        if (data.customer) {
+          // Phone number exists
+          const encodedEmailOrPhone = encodeURIComponent(emailOrPhone);
+          router.push(`/explore/verify-password?emailOrPhone=${encodedEmailOrPhone}`);        } else {
+          // Phone number does not exist
+          toast.error(`No account associated with phone number ${formData.emailOrPhone}.`);
+        }
+      } catch (error) {
+        console.error("Error checking phone number:", error);
+        toast.error("An error occurred. Please try again.");
+      }
+    } else {
+      // It's an email, proceed with existing logic
+      try {
+        const response = await medusa.auth.exists(emailOrPhone);
+        console.log(response);
+  
+        if (response.exists) {
+          const encodedEmailOrPhone = encodeURIComponent(emailOrPhone);
+          router.push(`/explore/verify-password?emailOrPhone=${encodedEmailOrPhone}`);
+        } else {
+          // Show toast if account does not exist
+          toast.error("Account does not exist with this email.");
+        }
+      } catch (error) {
+        console.error("Error verifying email:", error);
+        toast.error("An error occurred. Please try again.");
+      }
+    }
+  };
+  
 
   return (
     <div className="max-w-sm w-full flex flex-col items-center" data-testid="login-page">
@@ -108,9 +184,22 @@ const Login = ({ setCurrentView }: Props) => {
           />
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
-        <SubmitButton data-testid="sign-in-button" className="w-full mt-6">Sign in</SubmitButton>
+        <SubmitButton data-testid="sign-in-button" className="w-full mt-6 btn-second-custom text-large-regular text-white">
+          Sign in
+        </SubmitButton>
+        <div className="flex mt-5 justify-end">
+          <button
+            type="button"
+            onClick={handleForgotPassword} // Handle Forgot Password click
+            className="underline text-ui-fg-base text-base-regular"
+            data-testid="forgot-password-button"
+          >
+            Forgot Password?
+          </button>
+        </div>
       </form>
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
+
+      <span className="text-center text-ui-fg-base text-base-regular mt-6">
         Not a member?{" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
@@ -121,8 +210,10 @@ const Login = ({ setCurrentView }: Props) => {
         </button>
         .
       </span>
-    </div>
-  )
-}
 
-export default Login
+      <ToastContainer />
+    </div>
+  );
+};
+
+export default Login;

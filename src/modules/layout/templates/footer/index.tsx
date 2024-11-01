@@ -13,7 +13,7 @@ export default async function Footer() {
       <div className="content-container flex flex-col w-full">
         <div className="flex flex-col items-center justify-center py-20">
           <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full max-w-screen-lg mx-auto">
-            {product_categories && product_categories?.length > 0 && (
+            {/* {product_categories && product_categories?.length > 0 && (
               <div className="flex flex-col gap-y-2">
                 <span className="txt-small-plus txt-ui-fg-base footer-container font-avenir-bold">
                   Categories
@@ -63,7 +63,7 @@ export default async function Footer() {
                   })}
                 </ul>
               </div>
-            )}
+            )} */}
             {collections && collections.length > 0 && (
               <div className="flex flex-col gap-y-2">
                 <span className="txt-small-plus txt-ui-fg-base font-avenir-bold">Collections</span>

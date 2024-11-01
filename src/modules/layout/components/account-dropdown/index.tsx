@@ -25,7 +25,10 @@ const AccountDropdown = ({ customer }: AccountDropdownProps) => {
   const { countryCode } = useParams() as { countryCode: string };
 
   const handleLogout = async () => {
-    await signOut(countryCode);
+    console.log("clicked log out")
+    const response = await signOut(countryCode);
+    // console.log("response ",response)
+
   };
 
   const openAndCancel = () => {
