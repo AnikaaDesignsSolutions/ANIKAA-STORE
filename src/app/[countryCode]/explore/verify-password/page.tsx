@@ -157,7 +157,7 @@ try {
       <div className="max-w-sm w-full flex flex-col items-center bg-white p-6 rounded-lg shadow-lg">
         <h1 className="text-large-semi uppercase mb-6">Reset Password</h1>
         <p className="text-center text-base-regular text-ui-fg-base mb-8">
-          We've sent a 5-digit OTP to{' '}
+          We&apos;ve sent a 5-digit OTP to{' '}
           {isPhoneNumber(emailOrPhone) ? extractPhoneNumber(emailOrPhone) : emailOrPhone}.
           Please enter the OTP below to reset your password.
         </p>
