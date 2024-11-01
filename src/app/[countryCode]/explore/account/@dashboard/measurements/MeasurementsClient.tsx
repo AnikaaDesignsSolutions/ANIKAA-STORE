@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react"
 import MeasurementsTable from "./MeasurementsTable"
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 interface MeasurementData {
   [customerName: string]: {
@@ -29,7 +30,7 @@ const MeasurementsClient: React.FC<MeasurementsClientProps> = ({ customerId, cat
     const fetchMeasurements = async () => {
       try {
         const response = await fetch(
-          `http://localhost:9000/store/customer_product_measurements?id=${customerId}`
+          `${MEDUSA_BACKEND_URL}/store/customer_product_measurements?id=${customerId}`
         )
         if (!response.ok) {
           throw new Error("Failed to fetch customer measurements")

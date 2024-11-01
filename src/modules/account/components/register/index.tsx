@@ -164,7 +164,7 @@ const Register = ({ setCurrentView }: Props) => {
     // Check if the phone number already exists using Axios
     try {
       const response = await axios.get(
-        `http://localhost:9000/store/getEmailforPassword`,
+        `${MEDUSA_BACKEND_URL}/store/getEmailforPassword`,
         {
           params: {
             phoneNo: formData.phone,

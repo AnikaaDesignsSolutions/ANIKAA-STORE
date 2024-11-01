@@ -22,6 +22,7 @@ import ErrorMessage from "../error-message"
 import compareAddresses from "@lib/util/compare-addresses"
 import { useEffect } from "react"
 import axios from "axios"
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 const Addresses = ({
   cart,
@@ -56,7 +57,7 @@ const Addresses = ({
  // Function to fetch email based on phone number
  const fetchEmailByPhone = async (phoneNo: string) => {
   try {
-    const response = await axios.get("http://localhost:9000/store/getEmailforPassword", {
+    const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/getEmailforPassword`, {
       params: { phoneNo }, // Send phone number to get the associated email
     });
     const data = response.data;

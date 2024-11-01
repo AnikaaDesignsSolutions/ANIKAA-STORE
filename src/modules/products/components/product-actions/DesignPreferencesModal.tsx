@@ -208,7 +208,7 @@ const DesignPreferencesModal = ({
         // console.log("cart ",cart)
 
         // console.log("customerId ",customerId)
-        const response = await axios.get(`http://localhost:9000/store/customer_product_measurements?id=${customerId}`);
+        const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/customer_product_measurements?id=${customerId}`);
         const data = response.data.customer_product_measurement;
   
         // console.log("Full fetchCustomerProducts data:", data);
@@ -884,7 +884,7 @@ const DesignPreferencesModal = ({
       }
 
     // Send the POST request to the API
-    axios.post("http://localhost:9000/store/customizeDesign", postData)
+    axios.post(`${MEDUSA_BACKEND_URL}/store/customizeDesign`, postData)
       .then((response) => {
         // console.log("Design preferences updated successfully:", response.data);
 

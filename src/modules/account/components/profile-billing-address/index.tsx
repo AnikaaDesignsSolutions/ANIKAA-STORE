@@ -11,7 +11,7 @@ import MapSelector from "./MapSelector" // Import the MapSelector component
 import { Button } from "@medusajs/ui"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"; // Warning icon
-
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
@@ -108,7 +108,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
       }
 
       // POST request to your API to update the billing address with latitude and longitude
-      fetch('http://localhost:9000/store/editLatitudeLongitude', {
+      fetch(`${MEDUSA_BACKEND_URL}/store/editLatitudeLongitude`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

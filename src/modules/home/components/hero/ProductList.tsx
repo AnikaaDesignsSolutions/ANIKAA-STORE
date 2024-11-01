@@ -13,6 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import X from "@modules/common/icons/x";
+import { MEDUSA_BACKEND_URL } from "@lib/config";
 
 type Price = {
   amount: number;
@@ -44,7 +45,7 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     const fetchProducts = async () => {
       try {
         const response = await axios.get<PriceList[]>(
-          "http://localhost:9000/store/pricelists"
+          `${MEDUSA_BACKEND_URL}/store/pricelists`
         );
 
         const filteredProducts = response.data.flatMap((priceList) =>

@@ -9,6 +9,7 @@ import Input from "@modules/common/components/input"
 import AccountInfo from "../account-info"
 import { updateCustomerPhone } from "@modules/account/actions"
 import { phoneNumberPattern } from "@lib/util/regex"
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
@@ -49,7 +50,7 @@ const ProfilePhone: React.FC<MyInformationProps> = ({ customer }) => {
       // Check if the phone number already exists in the system using the API
       try {
         const response = await axios.get(
-          `http://localhost:9000/store/getEmailforPassword`,
+          `${MEDUSA_BACKEND_URL}/store/getEmailforPassword`,
           {
             params: {
               phoneNo: value,

@@ -6,6 +6,7 @@ import axios from "axios";
 import Input from "@modules/common/components/input";
 import ErrorMessage from "@modules/checkout/components/error-message";
 import { SubmitButton } from "@modules/checkout/components/submit-button";
+import { MEDUSA_BACKEND_URL } from "@lib/config";
 
 type Props = {
   setCurrentView: (view: any) => void; // Replace 'any' with appropriate view type if necessary
@@ -56,7 +57,7 @@ const ResetPassword = ({ setCurrentView }: Props) => {
 
       // If the emailOrPhone is a phone number, fetch the associated email
       if (isPhoneNumber(email)) {
-        const response = await axios.get("http://localhost:9000/store/getEmailforPassword", {
+        const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/getEmailforPassword`, {
           params: {
             phoneNo: email, // Send phone number to get the associated email
           },
@@ -74,7 +75,7 @@ const ResetPassword = ({ setCurrentView }: Props) => {
 
       console.log("email of phone ",email)
       // POST request to update the password using the email obtained
-      const response = await axios.post("http://localhost:9000/store/getEmailforPassword", {
+      const response = await axios.post(`${MEDUSA_BACKEND_URL}/store/getEmailforPassword`, {
         email: email, // Email retrieved from the phone number or already entered email
         password_body: formData.password, // Password being updated
       });

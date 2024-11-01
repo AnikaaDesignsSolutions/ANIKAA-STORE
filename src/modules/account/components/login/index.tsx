@@ -61,7 +61,7 @@ const Login = ({ setCurrentView }: Props) => {
       // Make the API call to check if the phone number exists
       try {
         const response = await axios.get(
-          `http://localhost:9000/store/getEmailforPassword`,
+          `${MEDUSA_BACKEND_URL}/store/getEmailforPassword`,
           {
             params: {
               phoneNo: formData.emailOrPhone,
@@ -111,7 +111,7 @@ const Login = ({ setCurrentView }: Props) => {
       // It's a phone number, so let's check if it exists using the API
       try {
         const response = await axios.get(
-          `http://localhost:9000/store/getEmailforPassword`,
+          `${MEDUSA_BACKEND_URL}/store/getEmailforPassword`,
           {
             params: {
               phoneNo: formData.emailOrPhone,

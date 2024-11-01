@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import axios from "axios"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { MEDUSA_BACKEND_URL } from "@lib/config"
 
 interface MeasurementData {
   [customerName: string]: {
@@ -38,7 +39,7 @@ const MeasurementsTable: React.FC<{ customerId: string; categories: Category[] }
     const fetchMeasurements = async () => {
       try {
         const response = await fetch(
-          `http://localhost:9000/store/customer_product_measurements?id=${customerId}`
+          `${MEDUSA_BACKEND_URL}/store/customer_product_measurements?id=${customerId}`
         )
         if (!response.ok) {
           throw new Error("Failed to fetch customer measurements")
@@ -64,7 +65,7 @@ const MeasurementsTable: React.FC<{ customerId: string; categories: Category[] }
 
     try {
       const response = await axios.get(
-        `http://localhost:9000/store/categoryMeasurement?category_id=${categoryId}`
+        `${MEDUSA_BACKEND_URL}/store/categoryMeasurement?category_id=${categoryId}`
       )
       const data = response.data.data[0]?.measurements || []
       const extractedAttributes = data.map((attr: any) =>
@@ -118,7 +119,7 @@ const MeasurementsTable: React.FC<{ customerId: string; categories: Category[] }
     }
 
     try {
-      const response = await fetch("http://localhost:9000/store/customer_product_measurements", {
+      const response = await fetch(`${MEDUSA_BACKEND_URL}/store/customer_product_measurements`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +162,7 @@ const MeasurementsTable: React.FC<{ customerId: string; categories: Category[] }
     if (!measurements) return
 
     try {
-      const response = await fetch("http://localhost:9000/store/customer_product_measurements", {
+      const response = await fetch(`${MEDUSA_BACKEND_URL}/store/customer_product_measurements`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -212,7 +213,7 @@ const MeasurementsTable: React.FC<{ customerId: string; categories: Category[] }
     }
 
     try {
-      const response = await fetch("http://localhost:9000/store/customer_product_measurements", {
+      const response = await fetch(`${MEDUSA_BACKEND_URL}/store/customer_product_measurements`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

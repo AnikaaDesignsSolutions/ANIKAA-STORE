@@ -203,7 +203,7 @@ const ShippingAddress = ({
   // Function to fetch email using the phone number
   const fetchEmailFromPhone = async (phoneNo: string) => {
     try {
-      const response = await axios.get("http://localhost:9000/store/getEmailforPassword", {
+      const response = await axios.get(`${MEDUSA_BACKEND_URL}/store/getEmailforPassword`, {
         params: { phoneNo }, // Send phone number to get the associated email
       });
 
