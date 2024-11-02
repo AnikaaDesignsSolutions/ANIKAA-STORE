@@ -88,58 +88,48 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
-            <div className="flex flex-col gap-y-2">
+           <div className="flex flex-col gap-y-2">
               <span className="txt-small-plus txt-ui-fg-base font-avenir-bold">FOR CLIENTS</span>
               <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small font-avenir">
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/policy/privacypolicy"
-                    target="_blank"
-                    rel="noreferrer"
                     className="footer-link"
                   >
                     Privacy Policy
-                  </a>
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/policy/refundandcancellation"
-                    target="_blank"
-                    rel="noreferrer"
                     className="footer-link"
                   >
                     Refund and cancellation Policy
-                  </a>
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/policy/shippinganddelivery"
-                    target="_blank"
-                    rel="noreferrer"
                     className="footer-link"
                   >
                     Shipping and Delivery
-                  </a>
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/policy/termsandconditions"
-                    target="_blank"
-                    rel="noreferrer"
                     className="footer-link"
                   >
                     Terms and Conditions
-                  </a>
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
+                  <LocalizedClientLink
                     href="/policy/contact"
-                    target="_blank"
-                    rel="noreferrer"
                     className="footer-link"
                   >
                     Ask a Question
-                  </a>
+                  </LocalizedClientLink>
                 </li>
               </ul>
             </div>
