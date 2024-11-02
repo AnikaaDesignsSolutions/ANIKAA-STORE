@@ -8,13 +8,15 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
-  Divider,
   IconButton,
+  keyframes,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import X from "@modules/common/icons/x";
 import { MEDUSA_BACKEND_URL } from "@lib/config";
 
+// Define the structure for price and variant data
 type Price = {
   amount: number;
   price_list_id: string | null;
@@ -24,79 +26,83 @@ type Variant = {
   product_id: string;
   product_title: string;
   product_thumbnail: string;
+  handle: string;
+  variant_title: string;
   prices: Price[];
   saleAmount?: number;
   amountDifference?: number;
   percentageDifference?: string;
 };
 
+// Define the structure for the price list
 type PriceList = {
   price_list_id: string;
   variants: Variant[];
 };
 
+// Define keyframes for blinking and moving
+const blinkAndMove = keyframes`
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-10px, 10px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(10px, -10px);
+    opacity: 0.8;
+  }
+`;
+
 const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
 }) => {
-  const [products, setProducts] = useState<Variant[]>([]);
+  const [groupedProducts, setGroupedProducts] = useState<{ [key: string]: Variant[] }>({});
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Fetch products with sale prices on component mount or when modal opens
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get<PriceList[]>(
-          `${MEDUSA_BACKEND_URL}/store/pricelists`
-        );
+        const response = await axios.get<PriceList[]>(`${MEDUSA_BACKEND_URL}/store/pricelists`);
 
-        const filteredProducts = response.data.flatMap((priceList) =>
-          priceList.variants
-            .filter((variant) => {
-              const prices = variant.prices;
-              const nonSalePrice = prices.find((p) => p.price_list_id === null);
-              const salePrice = prices.find(
-                (p) =>
-                  p.price_list_id &&
-                  p.amount < (nonSalePrice?.amount || Infinity)
-              );
+        // Filter products with valid sale prices and group by product_id
+        const productsById: { [key: string]: Variant[] } = {};
 
-              return (
-                salePrice &&
-                nonSalePrice &&
-                salePrice.amount < nonSalePrice.amount
-              );
-            })
-            .map((variant) => {
-              const nonSalePrice = variant.prices.find(
-                (p) => p.price_list_id === null
-              );
-              const salePrice = variant.prices.find(
-                (p) =>
-                  p.price_list_id &&
-                  p.amount < (nonSalePrice?.amount || Infinity)
-              );
+        response.data.forEach((priceList) => {
+          priceList.variants.forEach((variant) => {
+            const nonSalePrice = variant.prices.find((p) => p.price_list_id === null);
+            const salePrice = variant.prices.find(
+              (p) => p.price_list_id && p.amount < (nonSalePrice?.amount || Infinity)
+            );
 
-              if (nonSalePrice && salePrice) {
-                const amountDifference =
-                  nonSalePrice.amount - salePrice.amount;
-                const percentageDifference = (
-                  (amountDifference / nonSalePrice.amount) *
-                  100
-                ).toFixed(2);
+            if (nonSalePrice && salePrice && salePrice.amount < nonSalePrice.amount) {
+              const amountDifference = (nonSalePrice.amount - salePrice.amount) / 100;
+              const percentageDifference = (
+                (amountDifference / (nonSalePrice.amount / 100)) *
+                100
+              ).toFixed(2);
 
-                return {
-                  ...variant,
-                  saleAmount: salePrice.amount,
-                  amountDifference,
-                  percentageDifference,
-                };
+              const updatedVariant = {
+                ...variant,
+                saleAmount: salePrice.amount / 100,
+                amountDifference,
+                percentageDifference,
+              };
+
+              if (!productsById[variant.product_id]) {
+                productsById[variant.product_id] = [];
               }
+              productsById[variant.product_id].push(updatedVariant);
+            }
+          });
+        });
 
-              return null;
-            })
-            .filter(Boolean)
-        );
-
-        setProducts(filteredProducts as Variant[]);
+        setGroupedProducts(productsById);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -106,6 +112,11 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       fetchProducts();
     }
   }, [isOpen]);
+
+  // Do not render modal if no products are available
+  if (Object.keys(groupedProducts).length === 0) {
+    return null;
+  }
 
   return (
     <Modal
@@ -117,40 +128,42 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        p: { xs: 2, md: 4 },
       }}
     >
       <Box
         sx={{
-          width: 500,
-          padding: 4,
+          width: { xs: "100%", sm: 400, md: 500 },
+          padding: { xs: 2, sm: 4 },
           backgroundColor: "#fca4bf",
-        //   borderRadius: 3,
           color: "white",
           textAlign: "center",
           position: "relative",
           overflow: "hidden",
           boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.3)",
+          borderRadius: "8px",
         }}
       >
-        {/* Starry Background Layer */}
-        {[...Array(40)].map((_, index) => ( // Increase star count for a richer effect
+        {/* Decorative Background Stars */}
+        {[...Array(40)].map((_, index) => (
           <Box
             key={index}
             sx={{
               position: "absolute",
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 4 + 1}px`, // Star sizes between 1px and 5px
+              width: `${Math.random() * 4 + 1}px`,
               height: `${Math.random() * 4 + 1}px`,
               backgroundColor: "rgba(255, 255, 255, 0.8)",
-            //   borderRadius: "50%",
-              opacity: Math.random() * 0.8 + 0.2, // Random opacity between 0.2 and 1
-              boxShadow: "0 0 4px rgba(255, 255, 255, 0.5)", // Optional glow effect
+              boxShadow: "0 0 4px rgba(255, 255, 255, 0.5)",
               pointerEvents: "none",
+              borderRadius: "50%",
+              animation: `${blinkAndMove} ${Math.random() * 2 + 2}s ease-in-out infinite`,
             }}
           />
         ))}
 
+        {/* Close Button */}
         <IconButton
           onClick={onClose}
           sx={{
@@ -165,16 +178,35 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
         {/* Product List with Advertisement Styling */}
         <List>
-          {products.map((product) => (
-            <ListItem key={product.product_id} sx={{ flexDirection: "column", alignItems: "center" }}>
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1, textAlign:"center" }}>
-              <Typography variant="h5" fontWeight="bold">
-  Customize your perfect {product.product_title}{" "}
-  <Box component="span" color="yellow" fontWeight="bold">
-     Starting from ₹{product.saleAmount}
-  </Box>
-</Typography>
-
+          {Object.entries(groupedProducts).map(([productId, variants], idx) => (
+            <ListItem
+              key={productId}
+              sx={{ flexDirection: "column", alignItems: "center", my: 2 }}
+            >
+              <Box sx={{ textAlign: "center", mb: 2 }}>
+                <Typography variant="h5" fontWeight="bold" fontSize={{ xs: "1.25rem", sm: "1.5rem" }}>
+                  {`Customize your perfect ${variants[0].product_title}`}
+                </Typography>
+                {variants.map((variant, vIdx) => (
+                  <Box key={vIdx} sx={{ mt: 1, textAlign: "center" }}>
+                    <Typography
+                      variant="body1"
+                      color="yellow"
+                      fontWeight="bold"
+                      fontSize={{ xs: "0.9rem", sm: "1rem" }}
+                    >
+                      {variant.variant_title} - Starting from ₹{variant.saleAmount}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="white"
+                      sx={{ mt: 0.5 }}
+                      fontSize={{ xs: "0.8rem", sm: "0.9rem" }}
+                    >
+                      Save {variant.percentageDifference}% - ₹{variant.amountDifference} off!
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
               <Button
                 variant="contained"
@@ -182,11 +214,11 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   backgroundColor: "white",
                   color: "#ee0a67",
                   fontWeight: "bold",
-                  mt: 1,
+                  fontSize: { xs: "0.8rem", sm: "1rem" },
                   ":hover": { backgroundColor: "#f3f3f3" },
                 }}
                 onClick={() =>
-                  window.location.href = `/explore/products/${product.product_title}`
+                  window.location.href = `/explore/products/${variants[0].handle}`
                 }
               >
                 Customize Now
