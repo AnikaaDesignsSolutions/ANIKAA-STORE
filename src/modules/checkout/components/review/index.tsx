@@ -45,7 +45,7 @@ const Review = ({
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
                 By clicking the Place Order button, you confirm that you have
                 read, understand and accept our Terms of Use, Terms of Sale and
-                Returns Policy and acknowledge that you have read Medusa
+                Returns Policy and acknowledge that you have read Anikaa
                 Store&apos;s Privacy Policy.
               </Text>
             </div>

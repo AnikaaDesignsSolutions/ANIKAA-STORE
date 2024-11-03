@@ -446,7 +446,7 @@ const ShippingAddress = ({
 
   <button
     type="button"
-    className="px-2 py-1 bg-[#e88b9a] text-white text-small-semi flex items-center"
+    className="px-2 py-1 bg-[#fc8b9c] text-white text-small-semi flex items-center"
     onClick={handleUseCurrentLocation}
   >
     <FontAwesomeIcon icon={faLocation} className="mr-2" />

@@ -302,7 +302,7 @@ const MapModal: React.FC<MapModalProps> = ({ open, onClose, address }) => {
             <button
               type="button"
               onClick={handleUseCurrentLocation}
-              className="absolute top-3 right-3 bg-[#e88b9a] text-white py-2 px-4 rounded shadow flex items-center gap-2"
+              className="absolute top-3 right-3 bg-[#fc8b9c] text-white py-2 px-4 rounded shadow flex items-center gap-2"
               style={{ zIndex: 1000 }}
             >
               <FontAwesomeIcon icon={faLocation} /> {/* Add the location icon */}

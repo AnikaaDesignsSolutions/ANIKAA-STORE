@@ -16,7 +16,7 @@
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  border: 2px solid #e88b9a; /* Subtle border using theme color */
+  border: 2px solid #fc8b9c; /* Subtle border using theme color */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
 }
 
@@ -299,7 +299,7 @@
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  border: 2px solid #e88b9a;
+  border: 2px solid #fc8b9c;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 

@@ -719,7 +719,7 @@ const lineItemId = cart?.items.find((item: any) => item.variant_id === variant?.
     backgroundColor:
       cart?.items && cart.items.length > 0
         ? "#6e323b" // Background color for "Checkout Now"
-        : "#e88b9a", // Mustard yellow for "Add to Cart"
+        : "#fc8b9c", // Mustard yellow for "Add to Cart"
   }}
 >
   {!variant

@@ -513,7 +513,7 @@ const handleUploadImage = async (imageUrl: string) => {
     borderRadius: "0px",
     fontSize: "16px",
     textTransform: "uppercase",
-    backgroundColor: "#e88b9a", // Mustard yellow for "Add to Cart"
+    backgroundColor: "#fc8b9c", // Mustard yellow for "Add to Cart"
   }}
 >
   Customize a {product.title} now
@@ -533,7 +533,7 @@ const handleUploadImage = async (imageUrl: string) => {
     backgroundColor:
       cart?.items && cart.items.length > 0
         ? "#6e323b" // Background color for "Checkout Now"
-        : "#e88b9a", // Mustard yellow for "Add to Cart"
+        : "#fc8b9c", // Mustard yellow for "Add to Cart"
   }}
 >
   {!variant

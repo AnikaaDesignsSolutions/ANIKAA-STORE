@@ -1,6 +1,6 @@
 import React from "react"
 
-import Footer from "@modules/layout/templates/footer"
+import Footer from "@modules/layout/templates/footer-main"
 import Nav from "@modules/layout/templates/nav"
 
 const Layout: React.FC<{

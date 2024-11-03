@@ -170,9 +170,9 @@ try {
             placeholder="Enter 5-digit OTP"
             className="w-full text-center border p-2 mb-4"
           />
-          {/* Display OTP expiration time here with color #e88b9a */}
+          {/* Display OTP expiration time here with color #fc8b9c */}
           <p className="text-center text-sm">
-            The OTP will expire in <span style={{ color: '#e88b9a' }}>{Math.floor(timeLeft / 60)}:{('0' + (timeLeft % 60)).slice(-2)}.</span>
+            The OTP will expire in <span style={{ color: '#fc8b9c' }}>{Math.floor(timeLeft / 60)}:{('0' + (timeLeft % 60)).slice(-2)}.</span>
           </p>
           {/* Display error message for invalid OTP */}
           {errorMessage && (

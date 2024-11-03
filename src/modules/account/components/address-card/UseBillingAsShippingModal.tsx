@@ -225,7 +225,7 @@ const UseBillingAsShippingModal: React.FC<UseBillingAsShippingModalProps> = ({
             variant="contained"
             onClick={handleSetLocationName}
             disabled={!isFormValid}
-            sx={{ background: "#e88b9a" }}
+            sx={{ background: "#fc8b9c" }}
           >
             Set Location Name
           </Button>

@@ -1,12 +1,59 @@
+"use client";
+
+
+import React, { useEffect, useState } from "react";
 import { Text, clx } from "@medusajs/ui";
-import { getCategoriesList, getCollectionsList } from "@lib/data";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import MedusaCTA from "@modules/layout/components/medusa-cta";
 import "./FooterNav.css"; // Make sure to import your CSS file here
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDownload } from "@fortawesome/free-solid-svg-icons";
 
-export default async function Footer() {
-  const { collections } = await getCollectionsList(0, 6);
-  const { product_categories } = await getCategoriesList(0, 6);
+// Define BeforeInstallPromptEvent interface to specify types for prompt and userChoice
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+interface FooterProps {
+    collections: Array<{ id: string; handle: string; title: string }>;
+    productCategories: Array<{ id: string; handle: string; name: string; category_children?: any[] }>;
+  }
+  
+export default function Footer({ collections, productCategories }: FooterProps) {
+//   const { collections } = await getCollectionsList(0, 6);
+//   const { product_categories } = await getCategoriesList(0, 6);
+
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
+   // Capture the PWA install prompt event
+   useEffect(() => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
+
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        console.log("PWA installed successfully");
+      } else {
+        console.log("PWA installation dismissed");
+      }
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
+    }
+  };
+
 
   return (
     <footer className="border-t border-ui-border-base w-full footer-container">
@@ -88,7 +135,7 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
-           <div className="flex flex-col gap-y-2">
+            <div className="flex flex-col gap-y-2">
               <span className="txt-small-plus txt-ui-fg-base font-avenir-bold">FOR CLIENTS</span>
               <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small font-avenir">
                 <li>
@@ -196,12 +243,28 @@ export default async function Footer() {
             </div>
           </div>
         </div>
-        <div className="flex w-full mb-16 gap-x-1 justify-between text-ui-fg-muted">
+
+          <div className="flex flex-col md:flex-row w-full mb-20 md:gap-x-1 space-y-6 md:space-y-0 justify-between items-center text-ui-fg-muted">
           <Text className="txt-small-plus font-avenir-bold">
-            © {new Date().getFullYear()} Powered and secured by Anikaa Designs Solutions.
-          </Text>
-          <MedusaCTA />
-        </div>
+    © {new Date().getFullYear()} Powered and secured by Anikaa Designs Solutions.
+  </Text>
+
+
+  {showInstallButton && (
+    <div className="flex justify-start md:justify-center mb-4 md:mb-0">
+      <button
+        onClick={handleInstallClick}
+        className="download-app-btn flex items-center gap-2 txt-small-plus font-avenir-bold"
+      >
+        <FontAwesomeIcon icon={faDownload} className="download-icon" />
+        Download App
+      </button>
+    </div>
+  )}
+    <MedusaCTA />
+
+</div>
+
       </div>
     </footer>
   );

@@ -32,7 +32,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "src/modules/products/components/product-actions/getCustomerData.js"  ],
   "exclude": [
     "node_modules",
     ".next",

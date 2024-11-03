@@ -274,7 +274,7 @@
 
 @layer utilities {
   .text-ui-fg-interactive {
-    color: #e88b9a; 
+    color: #fc7494; 
     font-weight: bold;
   }
   .text-ui-fg-interactive-hover{
@@ -291,7 +291,7 @@
   transition: background-color 0.3s ease; /* Smooth transition on hover */
 }
 .btn-second-custom {
-  background-color: #e88b9a; /* Hover color */
+  background-color: #fc8b9c; /* Hover color */
 }
 
 .MuiTypography-root, 

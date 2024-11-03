@@ -108,7 +108,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   type="button"
   onClick={handleUseCurrentLocation}
   className="absolute top-3 right-3 text-white py-2 px-4 rounded shadow flex items-center gap-2"
-  style={{ backgroundColor: '#e88b9a', zIndex: 1000 }} // Set background color here
+  style={{ backgroundColor: '#fc8b9c', zIndex: 1000 }} // Set background color here
 >
   <FontAwesomeIcon icon={faLocation} /> {/* Add the location icon */}
   Use Current Location

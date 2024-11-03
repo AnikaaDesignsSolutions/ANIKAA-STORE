@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import Footer from "@modules/layout/templates/footer"
+import Footer from "@modules/layout/templates/footer-main"
 import Nav from "@modules/layout/templates/nav-others"
 import ChatFooter from "@modules/layout/templates/chat-footer/ChatFooter"
 import "styles/globals.css"

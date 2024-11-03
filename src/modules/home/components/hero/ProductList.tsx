@@ -135,7 +135,7 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         sx={{
           width: { xs: "100%", sm: 400, md: 500 },
           padding: { xs: 2, sm: 4 },
-          backgroundColor: "#fca4bf",
+          backgroundColor: "#ff6f91",
           color: "white",
           textAlign: "center",
           position: "relative",
@@ -184,23 +184,24 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               sx={{ flexDirection: "column", alignItems: "center", my: 2 }}
             >
               <Box sx={{ textAlign: "center", mb: 2 }}>
-                <Typography variant="h5" fontWeight="bold" fontSize={{ xs: "1.25rem", sm: "1.5rem" }}>
+                <Typography variant="h5" fontWeight="bold" fontSize={{ xs: "1.25rem", sm: "1.5rem" }} sx={{ fontFamily: "Caudex, serif" }}>
                   {`Customize your perfect ${variants[0].product_title}`}
                 </Typography>
                 {variants.map((variant, vIdx) => (
                   <Box key={vIdx} sx={{ mt: 1, textAlign: "center" }}>
-                    <Typography
+                    <Typography                       
                       variant="body1"
                       color="yellow"
                       fontWeight="bold"
                       fontSize={{ xs: "0.9rem", sm: "1rem" }}
+                      sx={{ fontFamily: "Caudex, serif" }}
                     >
                       {variant.variant_title} - Starting from ₹{variant.saleAmount}
                     </Typography>
-                    <Typography
+                    <Typography                       
                       variant="body2"
                       color="white"
-                      sx={{ mt: 0.5 }}
+                      sx={{ mt: 0.5, fontFamily: "Caudex, serif" }}
                       fontSize={{ xs: "0.8rem", sm: "0.9rem" }}
                     >
                       Save {variant.percentageDifference}% - ₹{variant.amountDifference} off!
@@ -216,6 +217,7 @@ const ProductModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   fontWeight: "bold",
                   fontSize: { xs: "0.8rem", sm: "1rem" },
                   ":hover": { backgroundColor: "#f3f3f3" },
+                  fontFamily: "Caudex, serif"
                 }}
                 onClick={() =>
                   window.location.href = `/explore/products/${variants[0].handle}`

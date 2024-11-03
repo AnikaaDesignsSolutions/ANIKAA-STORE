@@ -242,7 +242,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
           />
           <label
             htmlFor="uploadDesign"
-            className="cursor-pointer text-center py-3 px-5 border-4 border-[#56242e] hover:border-[#e88b9a] hover:bg-[#e88b9a] hover:text-white shadow-md transition-all duration-300 w-full"
+            className="cursor-pointer text-center py-3 px-5 border-4 border-[#56242e] hover:border-[#fc8b9c] hover:bg-[#fc8b9c] hover:text-white shadow-md transition-all duration-300 w-full"
           >
             {designImages.length > 0 ? "Change Design's Photos" : "Upload Design's Photos"}
           </label>
@@ -258,7 +258,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
           />
           <label
             htmlFor="uploadMaterial"
-            className="cursor-pointer text-center py-3 px-5 border-4 border-[#56242e] hover:border-[#e88b9a] hover:bg-[#e88b9a] hover:text-white shadow-md transition-all duration-300 w-full"
+            className="cursor-pointer text-center py-3 px-5 border-4 border-[#56242e] hover:border-[#fc8b9c] hover:bg-[#fc8b9c] hover:text-white shadow-md transition-all duration-300 w-full"
           >
             {materialImages.length > 0 ? "Change Material's Photos" : "Upload Material's Photos"}
           </label>

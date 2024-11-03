@@ -3,14 +3,13 @@ import { Metadata } from "next";
 import { getCollectionsList, getProductsList, getRegion } from "@lib/data";
 import FeaturedProducts from "@modules/home/components/featured-products";
 import Hero from "@modules/home/components/hero";
-import InstallButton from "app/components/InstallButton";
 import { ProductCollectionWithPreviews } from "types/global";
 import { cache } from "react";
 
 export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
+  title: "Anikaa",
   description:
-    "A performant frontend ecommerce starter template with Next.js 14 and Medusa.",
+    "Customize and wear tailormade dress from the comfort of ypur home.",
 };
 
 const getCollectionsWithProducts = cache(
@@ -69,7 +68,6 @@ export default async function Home({
   return (
     <div>
       <Hero />
-      <InstallButton /> {/* Add the InstallButton component here */}
       {/* <div className="py-12">
         <ul className="flex flex-col gap-x-6">
           <FeaturedProducts collections={collections} region={region} />

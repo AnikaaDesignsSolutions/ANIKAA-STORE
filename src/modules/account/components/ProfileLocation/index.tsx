@@ -276,7 +276,7 @@ const ProfileLocation: React.FC<ProfileLocationProps> = ({
           onClick={handleUseCurrentLocation}
           disabled={loading}
           className="h-10 mb-4"
-          style={{ backgroundColor: "#e88b9a" }}
+          style={{ backgroundColor: "#fc8b9c" }}
         >
           <FontAwesomeIcon icon={faLocationDot} />
           &nbsp;

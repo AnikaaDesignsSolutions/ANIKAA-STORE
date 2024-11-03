@@ -196,7 +196,7 @@ const Register = ({ setCurrentView }: Props) => {
       formDataToSubmit.append(key, value);
     });
 
-        // Check if the email already exists using Medusa
+        // Check if the email already exists using Anikaa
         try {
           console.log("response  email  ",dataToSubmit.email)
     

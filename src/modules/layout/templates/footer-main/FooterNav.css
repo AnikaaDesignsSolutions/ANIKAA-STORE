@@ -189,3 +189,27 @@
   
  
 }
+
+.download-app-btn {
+  background-color: #67018f; /* Blush pink */
+  color: white;
+  padding: 0.6rem 1.2rem;
+  /* border-radius: 30px;  */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  transition: all 0.3s ease;
+}
+
+.download-app-btn:hover {
+  background-color: #000; /* Darker shade for hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Increased shadow on hover */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+.download-icon {
+  font-size: 1.2rem; /* Slightly larger icon */
+}
