@@ -217,6 +217,7 @@ useEffect(() => {
   const handleButtonClick = () => {
     if (Object.keys(designPreferencesByImageUrl).length > 0) {
       // Navigate to the cart if designPreferencesByImageUrl is not empty
+      console.log("checkout now")
       router.push('/checkout');
     } else {
       // Otherwise, trigger the add to cart action
@@ -502,27 +503,34 @@ const handleUploadImage = async (imageUrl: string) => {
 
         <ProductPrice product={product} variant={variant} region={region} />
 
-{variant && (quantity > 0 )&& (
   <Button
-  onClick={handleIncreaseQuantity}
-  disabled={!variant || !!disabled || isAdding}
-  variant="primary"
-  className="w-full h-10 mt-3"
-  isLoading={isAdding}
-  style={{
-    borderRadius: "0px",
-    fontSize: "16px",
-    textTransform: "uppercase",
-    backgroundColor: "#fc8b9c", // Mustard yellow for "Add to Cart"
-  }}
->
-  Customize a {product.title} now
-</Button>
-)}
+    onClick={handleIncreaseQuantity}
+    disabled={!variant || !!disabled || isAdding}
+    variant="primary"
+    className="w-full h-10 mt-3 font-caudex"
+    isLoading={isAdding}
+    style={{
+      borderRadius: "0px",
+      fontSize: "16px",
+      textTransform: "uppercase",
+      background: !variant
+        ? "#ffb3be" // Solid color for disabled button
+        : "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", // Gradient background
+      color: "white",
+      boxShadow: !variant
+        ? "none" // No shadow for disabled button
+        : "0px 2px 4px rgba(0, 0, 0, 0.4)", // Add shadow for enabled button
+      border: "none",
+    }}
+  >
+    {!variant ? "Select Variant" : `Customize a ${product.title} now`}
+  </Button>
 
-        <Button
+{quantity > 0 && (
+
+<Button
   onClick={handleButtonClick}
-  disabled={!variant || !!disabled || isAdding}
+  disabled={ quantity === 0} // Disable when no variant and quantity is 0
   variant="primary"
   className="w-full h-10 mt-3"
   isLoading={isAdding}
@@ -531,19 +539,24 @@ const handleUploadImage = async (imageUrl: string) => {
     fontSize: "16px",
     textTransform: "uppercase",
     backgroundColor:
-      cart?.items && cart.items.length > 0
-        ? "#6e323b" // Background color for "Checkout Now"
-        : "#fc8b9c", // Mustard yellow for "Add to Cart"
+      ( quantity === 0) || isAdding
+        ? "#ffb3be" // Disabled button color
+        : "#6e323b", // Background color for "Checkout Now"
+    boxShadow:
+      ( quantity === 0) || isAdding
+        ? "none" // No shadow when disabled
+        : "0px 2px 4px rgba(0, 0, 0, 0.4)", // Add shadow for enabled button
+    border: "none",
+    color: "white", // Ensure text is visible on all backgrounds
+    cursor: ( quantity === 0) || isAdding ? "not-allowed" : "pointer", // Disable cursor interaction when disabled
   }}
 >
-  {!variant
-    ? "Select variant"
-    : cart && cart?.items && cart.items.length > 0
-    ? "Checkout Now"
-    : "Add to Cart"}
+  {quantity === 0
+    ? "Select Variant" // Show "Select Variant" if no variant and quantity is 0
+    : "Checkout Now"} 
 </Button>
 
-
+  )}
 
 
         {/* Design Preferences Modal */}

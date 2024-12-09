@@ -16,6 +16,7 @@ import PaymentContainer from "@modules/checkout/components/payment-container"
 import { setPaymentMethod } from "@modules/checkout/actions"
 import { paymentInfoMap } from "@lib/constants"
 import { StripeContext } from "@modules/checkout/components/payment-wrapper"
+import { placeOrder } from "@modules/checkout/actions"
 
 const Payment = ({
   cart,
@@ -26,7 +27,15 @@ const Payment = ({
   const [error, setError] = useState<string | null>(null)
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const onPaymentCompleted = async () => {
+    await placeOrder().catch((err) => {
+      setErrorMessage(err.toString())
+      setSubmitting(false)
+    })
+  }
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -96,6 +105,10 @@ const Payment = ({
     router.push(pathname + "?" + createQueryString("step", "review"), {
       scroll: false,
     })
+
+    setSubmitting(true)
+
+    onPaymentCompleted()
   }
 
   useEffect(() => {

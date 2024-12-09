@@ -9,6 +9,11 @@ type ShippingDetailsProps = {
 }
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+
+  const shouldHideEmail = (email: string) => {
+    return email.endsWith("@unidentified.com");
+  };
+
   return (
     <div>
       <Heading level="h2" className="flex flex-row text-3xl-regular my-6">
@@ -40,7 +45,9 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
           <Text className="txt-medium text-ui-fg-subtle">
             {order.shipping_address.phone}
           </Text>
+          {!shouldHideEmail(order.email) && (
           <Text className="txt-medium text-ui-fg-subtle">{order.email}</Text>
+          )}
         </div>
 
         <div className="flex flex-col w-1/3" data-testid="shipping-method-summary">

@@ -104,6 +104,20 @@ const DesignPreferencesModal = ({
   const toggleVideoHelp = () => setShowVideoHelp(!showVideoHelp);
   // console.log("designpreferencesmodal variant ",variant)
 
+  const buttonStyle = {
+    background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", // Gradient background
+    color: "white",
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.4)", // Add shadow for enabled buttons
+    border: "none",
+    ":hover": {
+      backgroundColor: "#fc798d", // Hover effect with the specified color
+    },
+    padding: "8px 16px",
+    fontSize: "0.9rem",
+    borderRadius: "4px", // Optional rounding
+  };
+  
+  
   useEffect(() => {
     const fetchAllDesignPreferences = async () => {
       const cartData = await retrieveCart();
@@ -1023,7 +1037,7 @@ const DesignPreferencesModal = ({
               position: "absolute",
               top: 16,
               right: 16,
-              color: "#990340",
+              color: "#fc6c85",
             }}
           >
             <X />
@@ -1050,15 +1064,18 @@ const DesignPreferencesModal = ({
             </Box>
           )}
 
-          <h2 style={{ color: "#990340", marginBottom: "16px", fontSize: "1.5rem", textAlign: "center", fontWeight:"BOLD" }}>
+          <h2       className="font-caudex"
+ style={{ color: "#fc6c85", marginBottom: "16px", fontSize: "1.5rem", textAlign: "center", fontWeight:"BOLD" }}>
             Design Preferences for {productTitle}
           </h2>
 
           <div style={{ marginBottom: 16, padding:"16px" }}>
-            <label style={{ color: "#990340", fontWeight: "bold" }}>
+            <label       className="font-caudex"
+ style={{ color: "#fc6c85", fontWeight: "bold" }}>
               How would you like your material to be stitched and customized?
             </label>
             <input
+                  className="font-caudex"
               type="text"
               value={designPreference}
               onChange={handleDesignPreferenceChange}
@@ -1077,7 +1094,7 @@ const DesignPreferencesModal = ({
           // backgroundColor: "#fce4ec",
         }}
       >
-        <h4 className="text-large-regular" style={{ color: "#990340",fontWeight:"bold" ,marginBottom: "8px" }}>
+        <h4 className="text-large-regular font-caudex" style={{ color: "#fc6c85",fontWeight:"bold" ,marginBottom: "8px" }}>
           Record or Upload Your Audio Design Preference
           <IconButton
             aria-label="info"
@@ -1090,7 +1107,7 @@ const DesignPreferencesModal = ({
         
         {/* Collapsible Help Information for Audio */}
         <Collapse in={showAudioHelp}>
-          <p className="text-small-semi" style={{ color: "#56242e", marginBottom: "16px" }}>
+          <p className="text-small-semi font-caudex" style={{ color: "#56242e", marginBottom: "16px" }}>
             Please record an audio message explaining how you would like your material to be stitched and customized. 
             You can also upload a pre-recorded audio file if you have one. We will use this audio to create your dress based on your verbal instructions.
           </p>
@@ -1101,15 +1118,20 @@ const DesignPreferencesModal = ({
     {!isRecording ? (
       <Button
         onClick={startAudioRecording}
+        // sx={{
+        //   background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
+        //   color: "white",
+        //   ":hover": { backgroundColor: "#56242e" },
+        //   padding: "8px 16px",
+        //   fontSize: "0.9rem",
+        //   borderRadius: "4px",
+        //   flex: "1 1 auto",
+        // }}
         sx={{
-          backgroundColor: "#fc8b9c",
-          color: "white",
-          ":hover": { backgroundColor: "#56242e" },
-          padding: "8px 16px",
-          fontSize: "0.9rem",
-          borderRadius: "4px",
-          flex: "1 1 auto",
-        }}
+    ...buttonStyle,
+    flex: "1 1 auto", // Add additional styles as needed
+  }}
+  className="font-caudex"
       >
         {audioFile || audioUrl ? "Re-record Audio" : "Start Audio Recording"}
       </Button>
@@ -1125,26 +1147,24 @@ const DesignPreferencesModal = ({
           borderRadius: "4px",
           flex: "1 1 auto",
         }}
+        className="font-caudex"
       >
         Stop Recording
       </Button>
     )}
 
-    <p style={{ marginBottom: 0, flexShrink: 0 }}>( Or )</p>
+    <p       className="font-caudex"
+ style={{ marginBottom: 0, flexShrink: 0 }}>( Or )</p>
 
     {/* Upload Button */}
     <Button
       variant="contained"
       component="label"
+      className="font-caudex"
       sx={{
-        backgroundColor: "#fc8b9c",
-        color: "white",
-        ":hover": { backgroundColor: "#56242e" },
-        padding: "8px 16px",
-        fontSize: "0.9rem",
-        borderRadius: "4px",
-        flex: "1 1 auto",
-      }}
+    ...buttonStyle,
+    flex: "1 1 auto", // Add additional styles as needed
+  }}
     >
       Upload Audio
       <input
@@ -1154,12 +1174,14 @@ const DesignPreferencesModal = ({
         style={{
           display: "none", // Hide the actual input
         }}
+        className="font-caudex"
       />
     </Button>
   </div>
         {audioUrl && (
           <div>
-            <p style={{ color: "#56242e", fontSize: "0.9rem", marginBottom: "8px" }}>
+            <p       className="font-caudex"
+ style={{ color: "#56242e", fontSize: "0.9rem", marginBottom: "8px" }}>
               Your audio has been recorded successfully. You can listen to it below:
             </p>
             <div style={{ position: "relative", marginTop: "16px" }}>
@@ -1169,6 +1191,7 @@ const DesignPreferencesModal = ({
              <IconButton
   onClick={() => deleteMediaFile(audioUrl, "audio")}
   size="small"  // Reduces the button size
+  className="font-caudex"
   sx={{
     position: "absolute",
     top: "-5px",
@@ -1197,7 +1220,7 @@ const DesignPreferencesModal = ({
           // backgroundColor: "#fce4ec",
         }}
       >
-        <h4 className="text-large-regular" style={{ color: "#990340",fontWeight:"bold" ,marginBottom: "8px" }}>
+        <h4 className="font-caudex text-large-regular" style={{ color: "#fc6c85",fontWeight:"bold" ,marginBottom: "8px" }}>
           Record or Upload Your Video Design Preference
           <IconButton
             aria-label="info"
@@ -1210,7 +1233,7 @@ const DesignPreferencesModal = ({
 
         {/* Collapsible Help Information for Video */}
         <Collapse in={showVideoHelp}>
-          <p className="text-small-semi" style={{ color: "#56242e", marginBottom: "16px" }}>
+          <p className="font-caudex text-small-semi" style={{ color: "#56242e", marginBottom: "16px" }}>
             Record a video showing how you would like your material to be stitched and customized. You can also upload a pre-recorded video. 
             We will follow your visual instructions to stitch your dress exactly as you demonstrate.
           </p>
@@ -1221,15 +1244,20 @@ const DesignPreferencesModal = ({
     {!isRecordingVideo ? (
       <Button
         onClick={startVideoRecording}
+        // sx={{
+        //   background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
+        //   color: "white",
+        //   ":hover": { backgroundColor: "#56242e" },
+        //   padding: "8px 16px",
+        //   fontSize: "0.9rem",
+        //   borderRadius: "4px",
+        //   flex: "1 1 auto",
+        // }}
         sx={{
-          backgroundColor: "#fc8b9c",
-          color: "white",
-          ":hover": { backgroundColor: "#56242e" },
-          padding: "8px 16px",
-          fontSize: "0.9rem",
-          borderRadius: "4px",
-          flex: "1 1 auto",
-        }}
+    ...buttonStyle,
+    flex: "1 1 auto", // Add additional styles as needed
+  }}
+  className="font-caudex"
       >
         {videoFile || videoUrl ? "Re-record Video" : "Start Video Recording"}
       </Button>
@@ -1245,26 +1273,24 @@ const DesignPreferencesModal = ({
           borderRadius: "4px",
           flex: "1 1 auto",
         }}
+        className="font-caudex"
       >
         Stop Video Recording
       </Button>
     )}
 
-    <p style={{ marginBottom: 0, flexShrink: 0 }}>( Or )</p>
+    <p       className="font-caudex"
+ style={{ marginBottom: 0, flexShrink: 0 }}>( Or )</p>
 
     {/* Upload Button */}
     <Button
       variant="contained"
       component="label"
       sx={{
-        backgroundColor: "#fc8b9c",
-        color: "white",
-        ":hover": { backgroundColor: "#56242e" },
-        padding: "8px 16px",
-        fontSize: "0.9rem",
-        borderRadius: "4px",
-        flex: "1 1 auto",
-      }}
+    ...buttonStyle,
+    flex: "1 1 auto", // Add additional styles as needed
+  }}
+  className="font-caudex"
     >
       Upload Video
       <input
@@ -1274,6 +1300,7 @@ const DesignPreferencesModal = ({
         style={{
           display: "none", // Hide the actual input
         }}
+        className="font-caudex"
       />
     </Button>
   </div>
@@ -1445,7 +1472,8 @@ const DesignPreferencesModal = ({
           </div>
 
           <div style={{ marginBottom: 16, paddingLeft: "16px", paddingBottom:"10px", }}>
-            <label style={{ color: "#56242e", fontWeight: "bold" }}>
+            <label       className="font-caudex"
+ style={{ color: "#56242e", fontWeight: "bold" }}>
               Upload Design Photos (e.g., how the material will be stitched)
             </label>
 
@@ -1458,7 +1486,12 @@ const DesignPreferencesModal = ({
           startCamera();
         }}
         disabled={uploadingImages}
-        sx={{ backgroundColor: "#fc8b9c", color: "white", ":hover": { backgroundColor: "#f8c2ce" } }}
+        sx={{background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", // Gradient background
+    color: "white",
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.4)", // Add shadow for enabled buttons
+    border: "none",
+    ":hover": { backgroundColor: "#56242e" },}}
+    className="font-caudex"
       >
         Capture design image Now
       </Button>
@@ -1473,7 +1506,8 @@ const DesignPreferencesModal = ({
   variant="contained"
   component="label"
   disabled={uploadingImages}
-  sx={{ fontSize:"0.9rem", textAlign:"center", backgroundColor: "#fc8b9c",textTransform:"capitalize", marginLeft: 2, color: "white", ":hover": { backgroundColor: "#f8c2ce" } }}
+  className="font-caudex"
+  sx={{ fontSize:"0.9rem", textAlign:"center", background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",textTransform:"capitalize", marginLeft: 2, color: "white", ":hover": { backgroundColor: "#56242e" }, }}
 >
   {uploadingImages ? "Uploading..." : "Upload Design Photos"}
   <input type="file" hidden multiple onChange={(e) => handleImageUpload(e, "design")} />
@@ -1487,7 +1521,8 @@ const DesignPreferencesModal = ({
           <canvas ref={canvasRef} width="320" height="240" style={{ display: "none" }}></canvas>
           <Button
             onClick={captureImage}
-            sx={{ marginTop: "16px", backgroundColor: "#fc8b9c", color: "white", ":hover": { backgroundColor: "#56242e" } }}
+            className="font-caudex"
+            sx={{ marginTop: "16px", background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)", color: "white", ":hover": { backgroundColor: "#56242e" } }}
           >
             Capture Image
           </Button>
@@ -1496,6 +1531,7 @@ const DesignPreferencesModal = ({
               setIsCapturing(false);
               stopCamera();
             }}
+            className="font-caudex"
             sx={{ marginTop: "16px", marginLeft: "8px", backgroundColor: "#d32f2f", color: "white", ":hover": { backgroundColor: "#b71c1c" } }}
           >
             Stop Capturing
@@ -1509,12 +1545,13 @@ const DesignPreferencesModal = ({
     onClick={uploadCapturedDesignImages}
     disabled={capturedImages.length === 0 }
     sx={{
-      backgroundColor: "#fc8b9c",
+      background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
       color: "white",
       ":hover": { backgroundColor: "#fc8b9c" },
       padding: "8px 16px",
       borderRadius: "4px",
     }}
+    className="font-caudex"
   >
     Upload Captured Design Images
   </Button>
@@ -1574,8 +1611,42 @@ const DesignPreferencesModal = ({
             ))}
           </div>
 
-          <h3 className="text-large-regular" style={{ color: "#990340", marginBottom: "16px", paddingLeft: "16px", fontWeight:"bold" }}>Measurement Options</h3>
-
+          <h3 className="font-caudex text-large-regular" style={{ color: "#fc6c85", marginBottom: "16px", paddingLeft: "16px", fontWeight:"bold" }}>Measurement Options</h3>
+ {/* Note Section */}
+ <div
+    style={{
+      backgroundColor: "#fdecea",
+      border: "1px solid #f5c6cb",
+      borderRadius: "8px",
+      padding: "16px",
+      marginBottom: "16px",
+      fontSize: "0.9rem",
+    }}
+  >
+    <p
+      className="font-caudex"
+      style={{
+        color: "#56242e",
+        fontWeight: "bold",
+        marginBottom: "8px",
+      }}
+    >
+      Note:
+    </p>
+    <p
+      className="font-caudex"
+      style={{
+        color: "#6e323b",
+        marginBottom: "0",
+        lineHeight: "1.5",
+      }}
+    >
+      It is recommended to send a reference measurement dress for tailoring. If
+      you choose to enter measurements in the table, please ensure that they
+      are accurate to avoid any fitting issues.
+    </p>
+  </div>
+  
 <RadioGroup
   value={measurementOption}
   onChange={handleMeasurementOptionChange}
@@ -1584,11 +1655,13 @@ const DesignPreferencesModal = ({
   <FormControlLabel
     value="upload"
     control={<Radio />}
+    className="font-caudex"
     label="I want to send a reference measurement dress for measurement"
   />
   <FormControlLabel
     value="enter"
     control={<Radio />}
+    className="font-caudex"
     label="I want to enter my measurement sizes here"
   />
 </RadioGroup>
@@ -1596,7 +1669,8 @@ const DesignPreferencesModal = ({
 {measurementOption === "upload" ? (
 <div style={{padding: "16px"}}>
           <div style={{ marginBottom: 16, }}>
-            <label style={{ color: "#56242e", fontWeight: "bold" }}>
+            <label       className="font-caudex"
+ style={{ color: "#56242e", fontWeight: "bold" }}>
               Upload Measurement Dress Images (e.g., images used for tailoring reference)
             </label>
 
@@ -1609,7 +1683,12 @@ const DesignPreferencesModal = ({
           startDressCamera();
         }}
         disabled={uploadingImages}
-        sx={{ backgroundColor: "#fc8b9c", color: "white", ":hover": { backgroundColor: "#f8c2ce" } }}
+        sx={{background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", // Gradient background
+    color: "white",
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.4)", // Add shadow for enabled buttons
+    border: "none",
+    ":hover": { backgroundColor: "#56242e" },}}
+    className="font-caudex"
       >
         Capture measurement dress image Now
       </Button>
@@ -1624,7 +1703,7 @@ const DesignPreferencesModal = ({
   variant="contained"
   component="label"
   disabled={uploadingDressImages}
-  sx={{ fontSize:"0.9rem", textAlign:"center", backgroundColor: "#fc8b9c", marginLeft: 2, textTransform:"capitalize", color: "white", ":hover": { backgroundColor: "#f8c2ce" } }}
+  sx={{ fontSize:"0.9rem", textAlign:"center", background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)", marginLeft: 2, textTransform:"capitalize", color: "white", ":hover": { backgroundColor: "#56242e" }, }}
 >
   {uploadingDressImages ? "Uploading..." : "Upload Measurement Dress Images"}
   <input type="file" hidden multiple onChange={(e) => handleImageUpload(e, "dress")} />
@@ -1637,12 +1716,14 @@ const DesignPreferencesModal = ({
           <video ref={videoDressRef} width="320" height="240" style={{ border: "1px solid #ddd", borderRadius: "8px" }} />
           <canvas ref={canvasDressRef} width="320" height="240" style={{ display: "none" }}></canvas>
           <Button
+                className="font-caudex"
             onClick={captureDressImage}
             sx={{ marginTop: "16px", backgroundColor: "#000", color: "white", ":hover": { backgroundColor: "#56242e" } }}
           >
             Capture Measurement Dress Image
           </Button>
           <Button
+                className="font-caudex"
             onClick={() => {
               setIsCapturingDress(false);
               stopDressCamera();
@@ -1660,12 +1741,13 @@ const DesignPreferencesModal = ({
     onClick={uploadCapturedDressImages}
     disabled={capturedDressImages.length === 0 }
     sx={{
-      backgroundColor: "#fc8b9c",
+      background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
       color: "white",
       ":hover": { backgroundColor: "#fc8b9c" },
       padding: "8px 16px",
       borderRadius: "4px",
     }}
+    className="font-caudex"
   >
     Upload Captured Measurement Dress Images
   </Button>
@@ -1728,8 +1810,8 @@ const DesignPreferencesModal = ({
           </div>
 ) : (
   <div style={{padding: "16px" }}>
-          <h3 className="text-large-regular" style={{ color: "#fc8b9c", marginBottom: "16px", fontWeight:"bold" }}>Measurement Table</h3>
-          <p className="text-base-regular" style={{ color: "#56242e", marginBottom: "16px" }}>
+          <h3 className="font-caudex text-large-regular" style={{ color: "#fc8b9c", marginBottom: "16px", fontWeight:"bold" }}>Measurement Table</h3>
+          <p className="font-caudex text-base-regular" style={{ color: "#56242e", marginBottom: "16px" }}>
             If you haven’t uploaded any measurement dress images, please enter the corresponding measurement values below.
           </p>
 
@@ -1737,14 +1819,16 @@ const DesignPreferencesModal = ({
   {customerProducts.length > 0 && (
 
   <div style={{ marginBottom: "16px" }}>
-                <label style={{ color: "#56242e", fontWeight: "bold", marginBottom: "8px", display: "block" }}>Select Customer with Measurement Data</label>
+                <label       className="font-caudex"
+ style={{ color: "#56242e", fontWeight: "bold", marginBottom: "8px", display: "block" }}>Select Customer with Measurement Data</label>
                 <Select
                   value={selectedCustomerProduct}
                   onChange={handleCustomerProductSelect}
                   displayEmpty
                   style={{ width: "100%", marginBottom: "16px" }}
                 >
-                  <MenuItem value="" disabled>Select Customer and Product</MenuItem>
+                  <MenuItem value="" disabled       className="font-caudex"
+                  >Select Customer and Product</MenuItem>
                   {customerProducts.map(({ customerName, productName }, index) => (
                     <MenuItem key={index} value={`${customerName}-${productName}`}>
                       {`${customerName} - ${productName}`}
@@ -1767,7 +1851,8 @@ const DesignPreferencesModal = ({
                 }}
               />
               <div style={{ flex: 1 }}>
-                <label style={{ color: "#56242e", fontWeight: "bold" }}>{attributeName}</label>
+                <label       className="font-caudex"
+ style={{ color: "#56242e", fontWeight: "bold" }}>{attributeName}</label>
                 <input
                   type="number"
                   name={attributeName}
@@ -1796,7 +1881,7 @@ const DesignPreferencesModal = ({
             onClick={handleEditPreferences} // Handle validation for Edit Design Preferences
               variant="contained"
               sx={{
-                backgroundColor: "#fc8b9c",
+                background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
                 color: "white",
                 ":hover": { backgroundColor: "#56242e" },
                 width: {
@@ -1810,6 +1895,7 @@ const DesignPreferencesModal = ({
                 // borderRadius: "6px",
               }}
               disabled={uploadingImages || uploadingDressImages}
+              className="font-caudex"
             >
               Edit Design Preferences
             </Button>
@@ -1818,7 +1904,7 @@ const DesignPreferencesModal = ({
             onClick={handleSubmit}
             variant="contained"
             sx={{
-              backgroundColor: "#fc8b9c",
+              background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)",
               color: "white",
               ":hover": { backgroundColor: "#56242e" },
               width: {
@@ -1832,7 +1918,8 @@ const DesignPreferencesModal = ({
               // borderRadius: "6px",
             }}
             disabled={uploadingImages || uploadingDressImages}
-          >
+            className="font-caudex"
+>
             Submit Design Preferences
           </Button>
           )}
@@ -1855,10 +1942,12 @@ const DesignPreferencesModal = ({
       borderRadius: 8, // Rounds the corners of the modal
     }}
   >
-    <h2 style={{ color: "#d32f2f", fontSize: "1.5rem", marginBottom: "16px", textAlign: "center" }}>
+    <h2       className="font-caudex"
+ style={{ color: "#d32f2f", fontSize: "1.5rem", marginBottom: "16px", textAlign: "center" }}>
       Incomplete Submission
     </h2>
-    <p style={{ color: "#424242", fontSize: "1rem", marginBottom: "24px", textAlign: "center" }}>
+    <p       className="font-caudex"
+ style={{ color: "#424242", fontSize: "1rem", marginBottom: "24px", textAlign: "center" }}>
       To proceed, please either upload at least one measurement dress image or ensure all fields in the measurement table are filled with values greater than 0.
     </p>
     <Button
@@ -1895,10 +1984,12 @@ const DesignPreferencesModal = ({
       borderRadius: 8, // Rounded corners for a modern look
     }}
   >
-    <h2 style={{ color: "#d32f2f", fontSize: "1.5rem", marginBottom: "16px", textAlign: "center" }}>
+    <h2       className="font-caudex"
+style={{ color: "#d32f2f", fontSize: "1.5rem", marginBottom: "16px", textAlign: "center" }}>
       Design Image Required
     </h2>
-    <p style={{ color: "#424242", fontSize: "1rem", marginBottom: "24px", textAlign: "center" }}>
+    <p       className="font-caudex"
+style={{ color: "#424242", fontSize: "1rem", marginBottom: "24px", textAlign: "center" }}>
       To submit your preferences, please upload at least one design image that shows how your material should be stitched or customized.
     </p>
     <Button
@@ -1914,6 +2005,7 @@ const DesignPreferencesModal = ({
         borderRadius: "8px",
         ":hover": { backgroundColor: "#b71c1c" },
       }}
+      className="font-caudex"
     >
       Got it!
     </Button>
@@ -1936,20 +2028,24 @@ const DesignPreferencesModal = ({
             borderRadius: 8,
           }}
         >
-          <h2 style={{ color: "#d32f2f", textAlign: "center", fontWeight: "bold" }}>Delete Confirmation</h2>
-          <p style={{ color: "#424242", textAlign: "center", marginBottom: "24px" }}>
+          <h2       className="font-caudex"
+style={{ color: "#d32f2f", textAlign: "center", fontWeight: "bold" }}>Delete Confirmation</h2>
+          <p       className="font-caudex"
+style={{ color: "#424242", textAlign: "center", marginBottom: "24px" }}>
             {deleteType === "dress"
               ? "Do you want to delete the measurement dress images?"
               : "Do you want to delete the measurement values?"}
           </p>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Button
+                  className="font-caudex"
               onClick={handleCancelDelete}
-              sx={{ backgroundColor: "#fc8b9c", color: "white", ":hover": { backgroundColor: "#56242e" } }}
+              sx={{ background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", boxShadow: "0px 2px 4px rgba(0, 0,0,0.4)", color: "white", ":hover": { backgroundColor: "#56242e" } }}
             >
               Cancel
             </Button>
             <Button
+                  className="font-caudex"
               onClick={handleConfirmDelete}
               sx={{ backgroundColor: "#d32f2f", color: "white", ":hover": { backgroundColor: "#b71c1c" } }}
             >

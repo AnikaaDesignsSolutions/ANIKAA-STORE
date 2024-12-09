@@ -139,6 +139,7 @@ const ImageCaptureModal = ({
 
         <h2
           id="modal-title"
+          className="font-caudex"
           style={{ marginBottom: "16px", fontSize: "1.2rem", textAlign: "center" }}
         >
           Capture or Upload an Image for {productTitle}
@@ -168,45 +169,119 @@ const ImageCaptureModal = ({
         {/* Canvas Element to Capture Photo */}
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
-        {/* Capture and Camera Control Buttons */}
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "16px" }}>
-          {!cameraActive ? (
-            <Button
-              onClick={startCamera}
-              variant="contained"
-              sx={{ backgroundColor: "#6e323b", color: "white", ":hover": { backgroundColor: "#56242e" } }}
-            >
-              Open Camera
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={capturePhoto}
-                variant="contained"
-                sx={{ backgroundColor: "#6e323b", color: "white", ":hover": { backgroundColor: "#56242e" }, marginRight: "10px" }}
-              >
-                Capture Now
-              </Button>
-              <Button
-                onClick={stopCamera}
-                variant="contained"
-                sx={{ backgroundColor: "#d32f2f", color: "white", ":hover": { backgroundColor: "#b71c1c" } }}
-              >
-                Cancel
-              </Button>
-            </>
-          )}
-        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: "16px", gap: "16px" }}>
+  {/* Camera Button Section */}
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    {!cameraActive ? (
+      <Button
+        onClick={startCamera}
+        variant="contained"
+        className="font-caudex"
+        sx={{
+          background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)",
+          color: "white",
+          ":hover": { backgroundColor: "#56242e" },
+        }}
+      >
+        Open Camera
+      </Button>
+    ) : (
+      <>
+        <Button
+          onClick={capturePhoto}
+          variant="contained"
+          className="font-caudex"
+          sx={{
+            backgroundColor: "#6e323b",
+            color: "white",
+            ":hover": { backgroundColor: "#56242e" },
+            marginRight: "10px",
+          }}
+        >
+          Capture Now
+        </Button>
+        <Button
+          onClick={stopCamera}
+          variant="contained"
+          className="font-caudex"
+          sx={{
+            backgroundColor: "#d32f2f",
+            color: "white",
+            ":hover": { backgroundColor: "#b71c1c" },
+          }}
+        >
+          Cancel
+        </Button>
+      </>
+    )}
+  </div>
 
-        {/* Upload Image Section */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleImageUpload}
-          accept="image/*"
-          style={{ display: "block", margin: "16px auto", padding: "8px", border: "1px solid #ccc", borderRadius: "4px", width: "80%" }}
-        />
-        {uploading && <p style={{ textAlign: "center" }}>Uploading...</p>}
+  {!cameraActive && (
+  <p
+        className="font-caudex"
+    style={{
+      margin: "0",
+      fontSize: "0.8rem",
+      // fontWeight: "bold",
+      color: "#6e323b",
+    }}
+  >
+    (Or)
+  </p>
+  )}
+  {/* Upload Image Section */}
+  {!cameraActive && (
+
+  <div>
+    <label
+      htmlFor="image-upload"
+      style={{
+        display: "block",
+        background: "linear-gradient(to right, #fc6c85, #fc8b9c, #fc9dab, #fc8b9c, #fc6c85)", // Gradient background
+        color: "white",
+        padding: "10px 16px",
+        borderRadius: "5px",
+        cursor: "pointer",
+        fontSize: "0.8rem",
+        fontWeight: "bold",
+        textAlign: "center",
+        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)", // Add shadow for depth
+        transition: "transform 0.2s ease, background-color 0.3s ease",
+      }}
+      className="font-caudex"
+    >
+      Upload Image
+    </label>
+    <input
+      id="image-upload"
+      ref={fileInputRef}
+      type="file"
+      onChange={handleImageUpload}
+      accept="image/*"
+      style={{
+        display: "none", // Hide the default input
+      }}
+    />
+  </div>
+  )}
+</div>
+
+{/* Uploading Indicator */}
+{uploading && (
+  <p
+    style={{
+      textAlign: "center",
+      color: "#6e323b",
+      marginTop: "8px",
+      fontSize: "1rem",
+      fontWeight: "bold",
+    }}
+    className="font-caudex"
+  >
+    Uploading...
+  </p>
+)}
+
       </Box>
     </Modal>
   );

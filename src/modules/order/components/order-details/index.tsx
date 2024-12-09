@@ -13,12 +13,20 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
     return formatted.slice(0, 1).toUpperCase() + formatted.slice(1)
   }
 
+  // Remove "@unidentified.com" from email if it ends with it
+  const formatEmail = (email: string) => {
+    if (email.endsWith("@unidentified.com")) {
+      return email.replace("@unidentified.com", "");
+    }
+    return email;
+  };
+
   return (
     <div>
       <Text>
         We have sent the order confirmation details to{" "}
         <span className="text-ui-fg-medium-plus font-semibold" data-testid="order-email">
-          {order.email}
+        {formatEmail(order.email)}
         </span>
         .
       </Text>

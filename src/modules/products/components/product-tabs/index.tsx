@@ -5,7 +5,8 @@ import { PricedProduct } from "@medusajs/medusa/dist/types/pricing"
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
-
+import PrivacyAndDataPolicy from "@modules/common/icons/PrivacyAndDataPolicy"
+import DataDeletionPolicy from "@modules/common/icons/DataDeletionPolicy"
 import Accordion from "./accordion"
 
 type ProductTabsProps = {
@@ -14,10 +15,10 @@ type ProductTabsProps = {
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const tabs = [
-    // {
-    //   label: "Product Information",
-    //   component: <ProductInfoTab product={product} />,
-    // },
+    {
+      label: "Privacy Policy",
+      component: <PrivacyPolicyTab />,
+    },
     {
       label: "Shipping & Returns",
       component: <ShippingInfoTab />,
@@ -42,47 +43,38 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
+const PrivacyPolicyTab = () => {
   return (
     <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
+      <div className="grid grid-cols-1 gap-y-8">
+        {/* Privacy Information Section */}
+        <div className="flex items-start gap-x-2">
+          <PrivacyAndDataPolicy />
           <div>
-            <span className="font-semibold">Material</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Country of origin</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Type</span>
-            <p>{product.type ? product.type.value : "-"}</p>
+            <span className="font-semibold">
+              Privacy and Data Policy
+            </span>
+            <p className="max-w-sm">
+              We value your privacy and take the utmost care to handle your personal data responsibly.
+            </p>
           </div>
         </div>
-        <div className="flex flex-col gap-y-4">
+
+        {/* Audio/Video and Design Data Deletion Policy */}
+        <div className="flex items-start gap-x-2">
+          <DataDeletionPolicy />
           <div>
-            <span className="font-semibold">Weight</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Dimensions</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length}L x ${product.width}W x ${product.height}H`
-                : "-"}
+            <span className="font-semibold">Data Deletion Policy</span>
+            <p className="max-w-sm">
+              Any audios, videos, design details, or material images provided by you during the order process will be securely deleted from our systems once your completely stitched dress is delivered. 
+              This ensures your personal data is handled with the highest regard for your privacy.
             </p>
           </div>
         </div>
       </div>
-      {product.tags?.length ? (
-        <div>
-          <span className="font-semibold">Tags</span>
-        </div>
-      ) : null}
     </div>
-  )
-}
+  );
+};
 
 const ShippingInfoTab = () => {
   return (
@@ -93,18 +85,8 @@ const ShippingInfoTab = () => {
           <div>
             <span className="font-semibold">Fast delivery</span>
             <p className="max-w-sm">
-              Your package will arrive in 3-5 business days at your pick up
+              Your package will arrive in 5-7 business days at your pick up
               location or in the comfort of your home.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Refresh />
-          <div>
-            <span className="font-semibold">Simple exchanges</span>
-            <p className="max-w-sm">
-              Is the fit not quite right? No worries - we&apos;ll exchange your
-              product for a new one.
             </p>
           </div>
         </div>
@@ -113,9 +95,8 @@ const ShippingInfoTab = () => {
           <div>
             <span className="font-semibold">Easy returns</span>
             <p className="max-w-sm">
-              Just return your product and we&apos;ll refund your money. No
-              questions asked – we&apos;ll do our best to make sure your return
-              is hassle-free.
+            If the delivered product does not fit correctly, you can resend the dress with the corrected measurements. Resizing will be done wherever possible to ensure the dress fits as per your updated specifications. 
+              Please note that resizing can only be done once, and you will be responsible for paying the delivery charges for returning the dress and receiving it back after resizing.
             </p>
           </div>
         </div>
